@@ -6,9 +6,9 @@ import json
 import requests
 from PIL import Image
 
-RUNPOD_API_KEY = 'INSERT_API_KEY_HERE'
-SERVERLESS_API_ID = 'INSERT_API_ID_HERE'
-RUNPOD_ENDPOINT_URL = f'https://api.runpod.ai/v2/{SERVERLESS_API_ID}/runsync'
+RUNPOD_API_KEY = 'INSERT_RUNPOD_API_KEY_HERE'
+SERVERLESS_ENDPOINT_ID = 'INSERT_RUNPOD_SERVERLESS_ENDPOINT_ID_HERE'
+RUNPOD_ENDPOINT_URL = f'https://api.runpod.ai/v2/{SERVERLESS_ENDPOINT_ID}/runsync'
 SOURCE_IMAGE = '/Users/ashley/src/inswapper/data/src.jpg'
 TARGET_IMAGE = '/Users/ashley/src/inswapper/data/target.jpg'
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     r = requests.post(
         RUNPOD_ENDPOINT_URL,
         headers={
-
+            'Authorization': f'Bearer {RUNPOD_API_KEY}'
         },
         json=payload
     )
@@ -44,9 +44,10 @@ if __name__ == '__main__':
     print(f'Status code: {r.status_code}')
 
     if r.status_code == 200:
-        print(json.dump(r.json(), indent=4, default=str))
+        resp_json = r.json()
+        print(json.dumps(resp_json, indent=4, default=str))
 
-        img = Image.open(io.BytesIO(base64.b64decode(resp_json['image'])))
+        img = Image.open(io.BytesIO(base64.b64decode(resp_json['output']['image'])))
         output_file = f'{uuid.uuid4()}.jpg'
 
         with open(output_file, 'wb') as f:
