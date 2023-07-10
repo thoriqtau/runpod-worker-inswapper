@@ -6,6 +6,7 @@ import copy
 import cv2
 import insightface
 import numpy as np
+import runpod
 from typing import List, Union
 from PIL import Image
 from werkzeug.utils import secure_filename
