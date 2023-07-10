@@ -46,7 +46,7 @@ if __name__ == '__main__':
     if r.status_code == 200:
         resp_json = r.json()
 
-        if 'output' in resp_json and image in resp_json['outputt']:
+        if 'output' in resp_json and 'image' in resp_json['output']:
             img = Image.open(io.BytesIO(base64.b64decode(resp_json['output']['image'])))
             output_file = f'{uuid.uuid4()}.jpg'
 
