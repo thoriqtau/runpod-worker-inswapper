@@ -31,23 +31,6 @@ RUN apt update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean -y
 
-# Set Python and pip
-RUN ln -s /usr/bin/python3.10 /usr/bin/python && \
-    curl https://bootstrap.pypa.io/get-pip.py | python && \
-    rm -f get-pip.py
-
-# Install Torch
-RUN --mount=type=cache,target=/cache --mount=type=cache,target=/root/.cache/pip \
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-
-# Install additional Python dependencies for RunPod worker
-COPY requirements.txt /requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 install --upgrade pip && \
-    pip3 install --upgrade -r /requirements.txt --no-cache-dir && \
-    rm /requirements.txt && \
-    pip3 cache purge
-
 # Add RunPod Handler and Docker container start script
 ADD rp_handler.py start.sh ./
 
