@@ -158,25 +158,49 @@ def face_swap(src_img_path, target_img_path):
     return base64.b64encode(image_data).decode('utf-8')
 
 
-def face_swap_api():
+def determine_file_extension(image_data):
+    image_extension = None
+    # You can add more checks for other image formats if necessary
+    if image_data.startswith('/9j/'):
+        image_extension = '.jpg'
+    elif image_data.startswith('iVBORw0Kg'):
+        image_extension = '.png'
+    # Add more image format checks as needed
+
+    if image_extension is None:
+        raise ValueError('Invalid image data')
+
+    return image_extension
+
+
+def face_swap_api(input):
     if not os.path.exists(TMP_PATH):
         os.makedirs(TMP_PATH)
 
-    # Get the source image file
-    source_file = request.files['source_image']
-    source_filename = secure_filename(source_file.filename)
-    source_unique_id = uuid.uuid4()
-    source_file_extension = os.path.splitext(source_filename)[1]
-    source_image_path = f'{TMP_PATH}/{source_unique_id}{source_file_extension}'
-    source_file.save(source_image_path)
+    if 'source_image' not in input or 'target_image' not in input:
+        raise Exception('Invalid payload')
 
-    # Get the target image file
-    target_file = request.files['target_image']
-    target_filename = secure_filename(target_file.filename)
-    target_unique_id = uuid.uuid4()
-    target_file_extension = os.path.splitext(target_filename)[1]
-    target_image_path = f'{TMP_PATH}/{target_unique_id}{target_file_extension}'
-    target_file.save(target_image_path)
+    unique_id = uuid.uuid4()
+    source_image_data = input['source_image']
+    target_image_data = input['target_image']
+
+    # Decode the source image data
+    source_image = base64.b64decode(source_image_data)
+    source_file_extension = determine_file_extension(source_image_data)
+    source_image_path = f'{TMP_PATH}/source_{unique_id}{source_file_extension}'
+
+    # Save the source image to disk
+    with open(source_image_path, 'wb') as source_file:
+        source_file.write(source_image)
+
+    # Decode the target image data
+    target_image = base64.b64decode(target_image_data)
+    target_file_extension = determine_file_extension(target_image_data)
+    target_image_path = f'{TMP_PATH}/target_{unique_id}{target_file_extension}'
+
+    # Save the target image to disk
+    with open(target_image_path, 'wb') as target_file:
+        target_file.write(target_image)
 
     try:
         result_image = face_swap(source_image_path, target_image_path)
@@ -187,12 +211,12 @@ def face_swap_api():
     os.remove(source_image_path)
     os.remove(target_image_path)
 
-    return make_response(jsonify(
-        {
-            'status': 'ok',
-            'image': result_image
-        }
-    ), 200)
+    return {
+        'status': 'ok',
+        'image': result_image
+    }
+
+
 # ---------------------------------------------------------------------------- #
 # RunPod Handler                                                               #
 # ---------------------------------------------------------------------------- #
