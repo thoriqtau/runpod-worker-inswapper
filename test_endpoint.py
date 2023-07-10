@@ -45,13 +45,15 @@ if __name__ == '__main__':
 
     if r.status_code == 200:
         resp_json = r.json()
-        print(json.dumps(resp_json, indent=4, default=str))
 
-        img = Image.open(io.BytesIO(base64.b64decode(resp_json['output']['image'])))
-        output_file = f'{uuid.uuid4()}.jpg'
+        if 'output' in resp_json and image in resp_json['outputt']:
+            img = Image.open(io.BytesIO(base64.b64decode(resp_json['output']['image'])))
+            output_file = f'{uuid.uuid4()}.jpg'
 
-        with open(output_file, 'wb') as f:
-            print(f'Saving image: {output_file}')
-            img.save(f, format='JPEG')
+            with open(output_file, 'wb') as f:
+                print(f'Saving image: {output_file}')
+                img.save(f, format='JPEG')
+        else:
+            print(json.dumps(resp_json, indent=4, default=str))
     else:
         print(f'ERROR: {r.content}')
