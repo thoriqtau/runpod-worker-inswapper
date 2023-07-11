@@ -7,10 +7,10 @@ import requests
 from PIL import Image
 
 RUNPOD_API_KEY = 'INSERT_RUNPOD_API_KEY_HERE'
-SERVERLESS_ENDPOINT_ID = 'INSERT_RUNPOD_SERVERLESS_ENDPOINT_ID_HERE'
+SERVERLESS_ENDPOINT_ID = 'INSERT_RUNPOD_ENDPOINT_ID_HERE'
 RUNPOD_ENDPOINT_URL = f'https://api.runpod.ai/v2/{SERVERLESS_ENDPOINT_ID}/runsync'
-SOURCE_IMAGE = '/Users/ashley/src/inswapper/data/src.jpg'
-TARGET_IMAGE = '/Users/ashley/src/inswapper/data/target.jpg'
+SOURCE_IMAGE = 'data/src.png'
+TARGET_IMAGE = 'data/target.png'
 
 
 def encode_image_to_base64(image_path):

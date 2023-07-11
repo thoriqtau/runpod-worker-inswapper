@@ -163,3 +163,5 @@ cython_debug/
 checkpoints
 CodeFormer
 test_input.json
+*.jpg
+data
