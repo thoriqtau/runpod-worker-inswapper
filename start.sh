@@ -12,7 +12,7 @@ ln -s /runpod-volume/.ifnude /root/.ifnude
 ln -s /runpod-volume/.insightface /root/.insightface
 
 echo "Starting RunPod Handler"
-source /workspace/inswapper/venv/bin/activate
-mv /rp_handler.py /workspace/inswapper/rp_handler.py
-cd /workspace/inswapper
+export PYTHONUNBUFFERED=1
+source /workspace/runpod-worker-inswapper/venv/bin/activate
+cd /workspace/runpod-worker-inswapper
 python -u rp_handler.py
