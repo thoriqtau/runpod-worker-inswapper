@@ -8,13 +8,14 @@ import insightface
 import numpy as np
 import runpod
 from runpod.serverless.utils.rp_validator import validate
-from runpod.serverless.modules.logging import log
+from runpod.serverless.modules.rp_logger import RunPodLogger
 from typing import List, Union
 from PIL import Image
 from restoration import *
 
 TMP_PATH = '/tmp/inswapper'
 script_dir = os.path.dirname(os.path.abspath(__file__))
+logger = RunPodLogger()
 
 INPUT_SCHEMA = {
     'source_image': {
@@ -98,7 +99,7 @@ def process(source_img: Union[Image.Image, List],
                 target_face = target_faces[i]
                 source_face = get_one_face(face_analyser, cv2.cvtColor(np.array(source_img[i]), cv2.COLOR_RGB2BGR))
                 if source_face is None:
-                    log('No source face found', 'ERROR')
+                    logger.log('No source face found', 'ERROR')
                     raise Exception('No source face found!')
                 temp_frame = swap_face(face_swapper, source_face, target_face, temp_frame)
         else:
@@ -106,13 +107,13 @@ def process(source_img: Union[Image.Image, List],
             source_img = cv2.cvtColor(np.array(source_img), cv2.COLOR_RGB2BGR)
             source_face = get_one_face(face_analyser, source_img)
             if source_face is None:
-                log('No source face found', 'ERROR')
+                logger.log('No source face found', 'ERROR')
                 raise Exception('No source face found!')
             for target_face in target_faces:
                 temp_frame = swap_face(face_swapper, source_face, target_face, temp_frame)
         result = temp_frame
     else:
-        log('No target faces found', 'ERROR')
+        logger.log('No target faces found', 'ERROR')
         raise Exception('No target faces found!')
 
     result_image = Image.fromarray(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
@@ -126,12 +127,12 @@ def face_swap(src_img_path, target_img_path):
 
     # download from https://huggingface.co/deepinsight/inswapper/tree/main
     model = os.path.join(script_dir, 'checkpoints/inswapper_128.onnx')
-    log(f'Face swap mode: {model}', 'INFO')
+    logger.log(f'Face swap mode: {model}', 'INFO')
 
     try:
-        log('Performing face swap', 'INFO')
+        logger.log('Performing face swap', 'INFO')
         result_image = process(source_img, target_img, model)
-        log('Face swap complete', 'INFO')
+        logger.log('Face swap complete', 'INFO')
     except Exception as e:
         raise
 
@@ -139,7 +140,7 @@ def face_swap(src_img_path, target_img_path):
     check_ckpts()
 
     # https://huggingface.co/spaces/sczhou/CodeFormer
-    log('Setting upsampler to RealESRGAN_x2plus', 'INFO')
+    logger.log('Setting upsampler to RealESRGAN_x2plus', 'INFO')
     upsampler = set_realesrgan()
 
     if torch.cuda.is_available():
@@ -147,7 +148,7 @@ def face_swap(src_img_path, target_img_path):
     else:
         torch_device = 'cpu'
 
-    log(f'Torch device: {torch_device.upper()}')
+    logger.log(f'Torch device: {torch_device.upper()}')
     device = torch.device(torch_device)
 
     codeformer_net = ARCH_REGISTRY.get('CodeFormer')(
@@ -159,7 +160,7 @@ def face_swap(src_img_path, target_img_path):
     ).to(device)
 
     ckpt_path = os.path.join(script_dir, 'CodeFormer/CodeFormer/weights/CodeFormer/codeformer.pth')
-    log(f'Loading CodeFormer model: {ckpt_path}', 'INFO')
+    logger.log(f'Loading CodeFormer model: {ckpt_path}', 'INFO')
     checkpoint = torch.load(ckpt_path)['params_ema']
     codeformer_net.load_state_dict(checkpoint)
     codeformer_net.eval()
@@ -168,7 +169,7 @@ def face_swap(src_img_path, target_img_path):
     face_upsample = True
     upscale = 1
     codeformer_fidelity = 0.5
-    log('Performing face restoration using CodeFormer', 'INFO')
+    logger.log('Performing face restoration using CodeFormer', 'INFO')
 
     try:
         result_image = face_restoration(
@@ -184,7 +185,7 @@ def face_swap(src_img_path, target_img_path):
     except Exception as e:
         raise
 
-    log('CodeFormer face restoration completed successfully', 'INFO')
+    logger.log('CodeFormer face restoration completed successfully', 'INFO')
     result_image = Image.fromarray(result_image)
     output_buffer = io.BytesIO()
     result_image.save(output_buffer, format='JPEG')
@@ -269,7 +270,7 @@ def handler(event):
 
 
 if __name__ == "__main__":
-    log('Starting RunPod Serverless...', 'INFO')
+    logger.log('Starting RunPod Serverless...', 'INFO')
     runpod.serverless.start(
         {
             'handler': handler

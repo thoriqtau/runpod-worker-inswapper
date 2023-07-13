@@ -14,7 +14,9 @@ from facelib.utils.misc import is_gray
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from basicsr.utils.realesrgan_utils import RealESRGANer
 from basicsr.utils.registry import ARCH_REGISTRY
-from runpod.serverless.modules.logging import log
+from runpod.serverless.modules.rp_logger import RunPodLogger
+
+logger = RunPodLogger()
 
 
 def check_ckpts():
@@ -125,7 +127,7 @@ def face_restoration(img, background_enhance, face_upsample, upscale, codeformer
                 del output
                 torch.cuda.empty_cache()
             except RuntimeError as error:
-                log(f'Failed inference for CodeFormer: {error}', 'ERROR')
+                logger.log(f'Failed inference for CodeFormer: {error}', 'ERROR')
                 restored_face = tensor2img(
                     cropped_face_t, rgb2bgr=True, min_max=(-1, 1)
                 )
