@@ -1,4 +1,4 @@
-# Inswapper | RunPod Worker
+# Inswapper | RunPod Serverless Worker
 
 This is the source code for a [RunPod](https://runpod.io?ref=w18gds2n)
 worker that uses [inswapper](
