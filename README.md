@@ -33,7 +33,7 @@ pip3 install -r requirements.txt
 mkdir checkpoints
 wget -O ./checkpoints/inswapper_128.onnx https://huggingface.co/deepinsight/inswapper/resolve/main/inswapper_128.onnx
 apt update
-apt install git-lfs
+apt -y install git-lfs
 git lfs install
 git clone https://huggingface.co/spaces/sczhou/CodeFormer
 ```
