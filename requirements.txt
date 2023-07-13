@@ -17,4 +17,4 @@ torch
 torchvision
 tqdm
 yapf
-runpod
+runpod>=0.10.0
