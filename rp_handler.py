@@ -7,13 +7,25 @@ import cv2
 import insightface
 import numpy as np
 import runpod
+from runpod.serverless.utils.rp_validator import validate
+from runpod.serverless.modules.logging import log
 from typing import List, Union
 from PIL import Image
-from werkzeug.utils import secure_filename
 from restoration import *
 
 TMP_PATH = '/tmp/inswapper'
 script_dir = os.path.dirname(os.path.abspath(__file__))
+
+INPUT_SCHEMA = {
+    'source_image': {
+        'type': str,
+        'required': True
+    },
+    'target_image': {
+        'type': str,
+        'required': True
+    }
+}
 
 
 # ---------------------------------------------------------------------------- #
@@ -86,19 +98,22 @@ def process(source_img: Union[Image.Image, List],
                 target_face = target_faces[i]
                 source_face = get_one_face(face_analyser, cv2.cvtColor(np.array(source_img[i]), cv2.COLOR_RGB2BGR))
                 if source_face is None:
-                    raise Exception("No source face found!")
+                    log('No source face found', 'ERROR')
+                    raise Exception('No source face found!')
                 temp_frame = swap_face(face_swapper, source_face, target_face, temp_frame)
         else:
             # replace all faces in target image to same source_face
             source_img = cv2.cvtColor(np.array(source_img), cv2.COLOR_RGB2BGR)
             source_face = get_one_face(face_analyser, source_img)
             if source_face is None:
-                raise Exception("No source face found!")
+                log('No source face found', 'ERROR')
+                raise Exception('No source face found!')
             for target_face in target_faces:
                 temp_frame = swap_face(face_swapper, source_face, target_face, temp_frame)
         result = temp_frame
     else:
-        print("No target faces found!")
+        log('No target faces found', 'ERROR')
+        raise Exception('No target faces found!')
 
     result_image = Image.fromarray(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
     return result_image
@@ -111,14 +126,29 @@ def face_swap(src_img_path, target_img_path):
 
     # download from https://huggingface.co/deepinsight/inswapper/tree/main
     model = os.path.join(script_dir, 'checkpoints/inswapper_128.onnx')
-    result_image = process(source_img, target_img, model)
+    log(f'Face swap mode: {model}', 'INFO')
+
+    try:
+        log('Performing face swap', 'INFO')
+        result_image = process(source_img, target_img, model)
+        log('Face swap complete', 'INFO')
+    except Exception as e:
+        raise
 
     # make sure the ckpts downloaded successfully
     check_ckpts()
 
     # https://huggingface.co/spaces/sczhou/CodeFormer
+    log('Setting upsampler to RealESRGAN_x2plus', 'INFO')
     upsampler = set_realesrgan()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    if torch.cuda.is_available():
+        torch_device = 'cuda'
+    else:
+        torch_device = 'cpu'
+
+    log(f'Torch device: {torch_device.upper()}')
+    device = torch.device(torch_device)
 
     codeformer_net = ARCH_REGISTRY.get('CodeFormer')(
         dim_embd=512,
@@ -129,27 +159,32 @@ def face_swap(src_img_path, target_img_path):
     ).to(device)
 
     ckpt_path = os.path.join(script_dir, 'CodeFormer/CodeFormer/weights/CodeFormer/codeformer.pth')
+    log(f'Loading CodeFormer model: {ckpt_path}', 'INFO')
     checkpoint = torch.load(ckpt_path)['params_ema']
     codeformer_net.load_state_dict(checkpoint)
     codeformer_net.eval()
     result_image = cv2.cvtColor(np.array(result_image), cv2.COLOR_RGB2BGR)
-
     background_enhance = True
     face_upsample = True
     upscale = 1
     codeformer_fidelity = 0.5
+    log('Performing face restoration using CodeFormer', 'INFO')
 
-    result_image = face_restoration(
-        result_image,
-        background_enhance,
-        face_upsample,
-        upscale,
-        codeformer_fidelity,
-        upsampler,
-        codeformer_net,
-        device
-    )
+    try:
+        result_image = face_restoration(
+            result_image,
+            background_enhance,
+            face_upsample,
+            upscale,
+            codeformer_fidelity,
+            upsampler,
+            codeformer_net,
+            device
+        )
+    except Exception as e:
+        raise
 
+    log('CodeFormer face restoration completed successfully', 'INFO')
     result_image = Image.fromarray(result_image)
     output_buffer = io.BytesIO()
     result_image.save(output_buffer, format='JPEG')
@@ -160,15 +195,17 @@ def face_swap(src_img_path, target_img_path):
 
 def determine_file_extension(image_data):
     image_extension = None
-    # You can add more checks for other image formats if necessary
-    if image_data.startswith('/9j/'):
-        image_extension = '.jpg'
-    elif image_data.startswith('iVBORw0Kg'):
-        image_extension = '.png'
-    # Add more image format checks as needed
 
-    if image_extension is None:
-        raise ValueError('Invalid image data')
+    try:
+        if image_data.startswith('/9j/'):
+            image_extension = '.jpg'
+        elif image_data.startswith('iVBORw0Kg'):
+            image_extension = '.png'
+        else:
+            # Default to png if we can't figure out the extension
+            image_extension = '.png'
+    except Exception as e:
+        image_extension = '.png'
 
     return image_extension
 
@@ -176,9 +213,6 @@ def determine_file_extension(image_data):
 def face_swap_api(input):
     if not os.path.exists(TMP_PATH):
         os.makedirs(TMP_PATH)
-
-    if 'source_image' not in input or 'target_image' not in input:
-        raise Exception('Invalid payload')
 
     unique_id = uuid.uuid4()
     source_image_data = input['source_image']
@@ -205,7 +239,10 @@ def face_swap_api(input):
     try:
         result_image = face_swap(source_image_path, target_image_path)
     except Exception as e:
-        raise Exception('Face swap failed')
+        return {
+            'status': 'error',
+            'message': str(e)
+        }
 
     # Clean up temporary images
     os.remove(source_image_path)
@@ -221,15 +258,18 @@ def face_swap_api(input):
 # RunPod Handler                                                               #
 # ---------------------------------------------------------------------------- #
 def handler(event):
-    '''
-    This is the handler function that will be called by the serverless.
-    '''
+    validated_input = validate(event['input'], INPUT_SCHEMA)
 
-    return face_swap_api(event["input"])
+    if 'errors' in validated_input:
+        return {
+            'errors': validated_input['errors']
+        }
+
+    return face_swap_api(validated_input['validated_input'])
 
 
 if __name__ == "__main__":
-    print("Starting RunPod Serverless...")
+    log('Starting RunPod Serverless...', 'INFO')
     runpod.serverless.start(
         {
             'handler': handler
