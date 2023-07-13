@@ -31,8 +31,8 @@ RUN apt update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean -y
 
-# Add RunPod Handler and Docker container start script
-ADD rp_handler.py start.sh ./
+# Docker container start script
+COPY start.sh /start.sh
 
 # Start the container
 RUN chmod +x /start.sh

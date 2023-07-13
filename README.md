@@ -22,11 +22,11 @@ model by [InsightFace](https://insightface.ai/).
 3. Attach the Network Volume to a Secure Cloud [GPU pod](https://www.runpod.io/console/gpu-secure-cloud).
 4. Select a light-weight template such as RunPod Pytorch.
 5. Deploy the GPU Cloud pod.
-6. Once the pod is up, open a Terminal and install inswapper:
+6. Once the pod is up, open a Terminal and install the required dependencies:
 ```bash
 cd /workspace
-git clone https://github.com/haofanwang/inswapper.git
-cd inswapper
+git clone https://github.com/ashleykleynhans/runpod-worker-inswapper.git
+cd runpod-worker-inswapper
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
@@ -37,30 +37,23 @@ apt install git-lfs
 git lfs install
 git clone https://huggingface.co/spaces/sczhou/CodeFormer
 ```
-7. Install the RunPod Python module which is required for the worker to function correctly within RunPod Serverless:
+7. Edit the `create_test_json.py` file and ensure that you set `SOURCE_IMAGE` to
+   a valid image to upscale (you can upload the image to your pod using
+   [runpodctl](https://github.com/runpod/runpodctl/releases)).
+8. Create the `test_input.json` file by running the `create_test_json.py` script:
 ```bash
-pip3 install runpod
+python3 create_test_json.py
 ```
-8. Run the example inference so that the models can be cached on
+9. Run an inference on the `test_input.json` input so that the models can be cached on
    your Network Volume, which will dramatically reduce cold start times for RunPod Serverless:
 ```bash
-python3 swapper.py \
-  --source_img /workspace/inswapper/data/src.jpg \
-  --target_img /workspace/inswapper/data/target.jpg \
-  --face_restore \
-  --background_enhance \
-  --face_upsample \
-  --upscale 1 \
-  --codeformer_fidelity 0.5
+python3 -u rp_handler.py
 ```
 
 ### Dockerfile
 
 The worker is built using a Dockerfile. The Dockerfile specifies the
 base image, environment variables, and system package dependencies
-
-The Python dependencies are specified in requirements.txt.
-The primary dependency is `runpod==0.10.0`.
 
 ## Running the Worker
 
@@ -84,7 +77,8 @@ The worker provides an API for inference. The API payload looks like this:
 
 The serverless handler (`rp_handler.py`) is a Python script that handles
 inference requests.  It defines a function handler(event) that takes an
-inference request, runs the inference using the inswapper model (and
+inference request, runs the inference using the [inswapper](
+https://huggingface.co/deepinsight/inswapper/tree/main) model (and
 CodeFormer where applicable), and returns the output as a JSON response in
 the following format:
 
