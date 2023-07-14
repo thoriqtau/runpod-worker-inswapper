@@ -33,7 +33,7 @@ RUN apt update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean -y
 
-# 1. Clone the Inswapper worker rep
+# 1. Clone the worker repo
 # 2. Create and activate Python venv
 # 3. Create checkpoints directory and install inswapper model
 # 4. Install git LFS and clone CodeFormer face restoration repo
