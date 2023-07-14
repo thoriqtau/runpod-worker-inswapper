@@ -53,7 +53,7 @@ python3 create_test_json.py
 python3 -u rp_handler.py
 ```
 10. Sign up for a Docker hub account if you don't already have one.
-11. Build the Docker image:
+11. Build the Docker image and push to Docker hub:
 ```bash
 docker build -t dockerhub-username/runpod-worker-inswapper:1.0.0 -f Dockerfile.Network_Volume .
 docker login
