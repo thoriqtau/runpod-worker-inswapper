@@ -1,8 +1,8 @@
-# Inswapper | RunPod Serverless Worker
+# roop inswapper | RunPod Serverless Worker
 
 This is the source code for a [RunPod](https://runpod.io?ref=w18gds2n)
-worker that uses [inswapper](
-https://huggingface.co/deepinsight/inswapper/tree/main) for face
+Serverless worker that uses roop ([inswapper](
+https://huggingface.co/deepinsight/inswapper/tree/main)) for face
 swapping AI tasks.
 
 ## Model
@@ -12,8 +12,6 @@ https://huggingface.co/deepinsight/inswapper/resolve/main/inswapper_128.onnx)
 model by [InsightFace](https://insightface.ai/).
 
 ## Building the Worker
-
-#### Note: This worker requires a RunPod Network Volume with inswapper preinstalled in order to function correctly.
 
 ### Option 1: Network Volume
 
@@ -114,3 +112,26 @@ the following format:
   }
 }
 ```
+
+## Acknowledgements
+
+- [Inswapper](https://github.com/haofanwang/inswapper)
+- [Roop](https://github.com/s0md3v/roop)
+- [Insightface](https://github.com/deepinsight)
+- [CodeFormer](https://huggingface.co/spaces/sczhou/CodeFormer)
+- [Real-ESRGAN (ai-forever)](https://github.com/ai-forever/Real-ESRGAN)
+
+## Community and Contributing
+
+Pull requests and issues on [GitHub](https://github.com/ashleykleynhans/runpod-worker-inswapper)
+are welcome. Bug fixes and new features are encouraged.
+
+You can contact me and get help with deploying your Serverless
+worker to RunPod on the RunPod Discord Server below,
+my username is **ashleyk**.
+
+<a target="_blank" href="https://discord.gg/pJ3P2DbUUq">![Discord Banner 2](https://discordapp.com/api/guilds/912829806415085598/widget.png?style=banner2)</a>
+
+## Appreciate my work?
+
+<a href="https://www.buymeacoffee.com/" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
