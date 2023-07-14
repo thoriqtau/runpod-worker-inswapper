@@ -2,8 +2,8 @@
 import base64
 import json
 
-SOURCE_IMAGE = 'data/src.jpg'
-TARGET_IMAGE = 'data/target.jpg'
+SOURCE_IMAGE = '/workspace/runpod-worker-inswapper/data/src.jpg'
+TARGET_IMAGE = '/workspace/runpod-worker-inswapper/data/target.jpg'
 
 
 def encode_image_to_base64(image_path):
