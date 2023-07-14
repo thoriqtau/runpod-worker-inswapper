@@ -15,7 +15,12 @@ model by [InsightFace](https://insightface.ai/).
 
 #### Note: This worker requires a RunPod Network Volume with inswapper preinstalled in order to function correctly.
 
-### Network Volume
+### Option 1: Network Volume
+
+This will store your application on a Runpod Network Volume and
+build a light weight Docker image that runs everything
+from the Network volume without installing the application
+inside the Docker image.
 
 1. [Create a RunPod Account](https://runpod.io?ref=w18gds2n).
 2. Create a [RunPod Network Volume](https://www.runpod.io/console/user/storage).
@@ -49,16 +54,35 @@ python3 create_test_json.py
 ```bash
 python3 -u rp_handler.py
 ```
+10. Sign up for a Docker hub account if you don't already have one.
+11. Build the Docker image:
+```bash
+docker build -t dockerhub-username/runpod-worker-inswapper:1.0.0 -f Dockerfile.Network_Volume .
+docker login
+docker push dockerhub-username/runpod-worker-inswapper:1.0.0
+```
 
-### Dockerfile
+### Option 2: Standalone
 
-The worker is built using a Dockerfile. The Dockerfile specifies the
-base image, environment variables, and system package dependencies
+This is the simpler option.  No network volume is required.
+The entire application will be stored within the Docker image
+but will obviously create a more bulky Docker image as a result.
 
-## Running the Worker
+```bash
+docker build -t dockerhub-username/runpod-worker-inswapper:1.0.0 -f Dockerfile.Standalone .
+docker login
+docker push dockerhub-username/runpod-worker-inswapper:1.0.0
+```
 
-The worker can be run using the `start.sh` script. This script starts the
-init system and runs the serverless handler script.
+## Dockerfile
+
+There are 2 different Dockerfile configurations
+
+1. Network_Volume - See Option 1 Above.
+2. Standalone - See Option 2 Above (No Network Volume is required for this option).
+
+The worker is built using one of the two Dockerfile configurations
+depending on your specific requirements.
 
 ## API
 
