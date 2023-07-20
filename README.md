@@ -1,6 +1,6 @@
 # roop inswapper | RunPod Serverless Worker
 
-This is the source code for a [RunPod](https://runpod.io?ref=w18gds2n)
+This is the source code for a [RunPod](https://runpod.io?ref=2xxro4sy)
 Serverless worker that uses roop ([inswapper](
 https://huggingface.co/deepinsight/inswapper/tree/main)) for face
 swapping AI tasks.
@@ -20,7 +20,7 @@ build a light weight Docker image that runs everything
 from the Network volume without installing the application
 inside the Docker image.
 
-1. [Create a RunPod Account](https://runpod.io?ref=w18gds2n).
+1. [Create a RunPod Account](https://runpod.io?ref=2xxro4sy).
 2. Create a [RunPod Network Volume](https://www.runpod.io/console/user/storage).
 3. Attach the Network Volume to a Secure Cloud [GPU pod](https://www.runpod.io/console/gpu-secure-cloud).
 4. Select a light-weight template such as RunPod Pytorch.
