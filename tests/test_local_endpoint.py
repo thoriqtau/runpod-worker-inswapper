@@ -7,11 +7,8 @@ import requests
 import time
 from PIL import Image
 
-RUNPOD_API_KEY = 'INSERT_RUNPOD_API_KEY_HERE'
-SERVERLESS_ENDPOINT_ID = 'INSERT_RUNPOD_ENDPOINT_ID_HERE'
-RUNPOD_ENDPOINT_BASE_URL = f'https://api.runpod.ai/v2/{SERVERLESS_ENDPOINT_ID}'
-SOURCE_IMAGE = 'data/src.png'
-TARGET_IMAGE = 'data/target.png'
+SOURCE_IMAGE = '../data/src.png'
+TARGET_IMAGE = '../data/target.png'
 
 
 def encode_image_to_base64(image_path):
@@ -31,6 +28,8 @@ def save_result_image(resp_json):
 
 
 if __name__ == '__main__':
+    runpod_endpoint_base_url = f'http://127.0.0.1:8000'
+
     # Load the images and encode them to base64
     source_image_base64 = encode_image_to_base64(SOURCE_IMAGE)
     target_image_base64 = encode_image_to_base64(TARGET_IMAGE)
@@ -44,10 +43,10 @@ if __name__ == '__main__':
     }
 
     r = requests.post(
-        f'{RUNPOD_ENDPOINT_BASE_URL}/runsync',
-        headers={
-            'Authorization': f'Bearer {RUNPOD_API_KEY}'
-        },
+        f'{runpod_endpoint_base_url}/runsync',
+        # headers={
+        #     'Authorization': f'Bearer {runpod_api_key}'
+        # },
         json=payload
     )
 
@@ -68,10 +67,10 @@ if __name__ == '__main__':
 
                 while request_in_queue:
                     r = requests.get(
-                        f'{RUNPOD_ENDPOINT_BASE_URL}/status/{request_id}',
-                        headers={
-                            'Authorization': f'Bearer {RUNPOD_API_KEY}'
-                        }
+                        f'{runpod_endpoint_base_url}/status/{request_id}',
+                        # headers={
+                        #     'Authorization': f'Bearer {runpod_api_key}'
+                        # }
                     )
 
                     print(f'Status code from RunPod status endpoint: {r.status_code}')

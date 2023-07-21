@@ -17,4 +17,5 @@ torch
 torchvision
 tqdm
 yapf
+python-dotenv
 runpod>=0.10.0
