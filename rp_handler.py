@@ -87,7 +87,8 @@ def swap_face(face_swapper,
 
 def process(source_img: Union[Image.Image, List],
             target_img: Image.Image,
-            target_index: int,
+            source_indexes: str,
+            target_indexes: str,
             model: str):
 
     # load face_analyser
@@ -135,7 +136,7 @@ def process(source_img: Union[Image.Image, List],
             if source_faces is None:
                 raise Exception('No source faces found!')
 
-            if target_index == -1:
+            if target_indexes == "-1":
                 if num_source_faces == 1:
                     logger.info('Replacing all faces in target image with the same face from the source image')
                     num_iterations = num_target_faces
@@ -161,18 +162,66 @@ def process(source_img: Union[Image.Image, List],
                         target_index,
                         temp_frame
                     )
-            else:
-                logger.info(f'Replacing the face at index {target_index} in the target image')
+            elif source_indexes == '-1' and target_indexes == '-1':
+                logger.info('Replacing specific face(s) in the target image with the face from the source image')
+                target_indexes = target_indexes.split(',')
                 source_index = 0
 
-                temp_frame = swap_face(
-                    face_swapper,
-                    source_faces,
-                    target_faces,
-                    source_index,
-                    target_index,
-                    temp_frame
-                )
+                for target_index in target_indexes:
+                    target_index = int(target_index)
+
+                    temp_frame = swap_face(
+                        face_swapper,
+                        source_faces,
+                        target_faces,
+                        source_index,
+                        target_index,
+                        temp_frame
+                    )
+            else:
+                logger.info('Replacing specific face(s) in the target image with specific face(s) from the source image')
+
+                if source_indexes == "-1":
+                    source_indexes = ','.join(map(lambda x: str(x), range(num_source_faces)))
+
+                if target_indexes == "-1":
+                    target_indexes = ','.join(map(lambda x: str(x), range(num_target_faces)))
+
+                source_indexes = source_indexes.split(',')
+                target_indexes = target_indexes.split(',')
+                num_source_faces_to_swap = len(source_indexes)
+                num_target_faces_to_swap = len(target_indexes)
+
+                if num_source_faces_to_swap > num_source_faces:
+                    raise Exception('Number of source indexes is greater than the number of faces in the source image')
+
+                if num_target_faces_to_swap > num_target_faces:
+                    raise Exception('Number of target indexes is greater than the number of faces in the target image')
+
+                if num_source_faces_to_swap > num_target_faces_to_swap:
+                    num_iterations = num_source_faces_to_swap
+                else:
+                    num_iterations = num_target_faces_to_swap
+
+                if num_source_faces_to_swap == num_target_faces_to_swap:
+                    for index in range(num_iterations):
+                        source_index = int(source_indexes[index])
+                        target_index = int(target_indexes[index])
+
+                        if source_index > num_source_faces-1:
+                            raise ValueError(f'Source index {source_index} is higher than the number of faces in the source image')
+
+                        if target_index > num_target_faces-1:
+                            raise ValueError(f'Target index {target_index} is higher than the number of faces in the target image')
+
+                        temp_frame = swap_face(
+                            face_swapper,
+                            source_faces,
+                            target_faces,
+                            source_index,
+                            target_index,
+                            temp_frame
+                        )
         else:
             logger.error('Unsupported face configuration')
             raise Exception('Unsupported face configuration')
