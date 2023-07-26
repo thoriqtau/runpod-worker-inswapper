@@ -450,7 +450,7 @@ def handler(event):
 
     if 'errors' in validated_input:
         return {
-            'errors': validated_input['errors']
+            'error': validated_input['errors']
         }
 
     return face_swap_api(validated_input['validated_input'])

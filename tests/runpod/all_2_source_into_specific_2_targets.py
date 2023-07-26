@@ -17,7 +17,7 @@ TARGET_IMAGE = '../../data/hp-3faces.jpeg'
 SOURCE_INDEXES = '-1'
 TARGET_INDEXES = '0,2'  # Replace first face and last face (skipping middle face)
 BACKGROUND_ENHANCE = True
-FACE_RESTORE = False
+FACE_RESTORE = True
 FACE_UPSAMPLE = True
 UPSCALE = 1
 CODEFORMER_FIDELITY = 0.5
@@ -81,9 +81,9 @@ if __name__ == '__main__':
 
     r = requests.post(
         f'{runpod_endpoint_base_url}/runsync',
-        # headers={
-        #     'Authorization': f'Bearer {runpod_api_key}'
-        # },
+        headers={
+            'Authorization': f'Bearer {runpod_api_key}'
+        },
         json=payload
     )
 
@@ -105,9 +105,9 @@ if __name__ == '__main__':
                 while request_in_queue:
                     r = requests.get(
                         f'{runpod_endpoint_base_url}/status/{request_id}',
-                        # headers={
-                        #     'Authorization': f'Bearer {runpod_api_key}'
-                        # }
+                        headers={
+                            'Authorization': f'Bearer {runpod_api_key}'
+                        }
                     )
 
                     print(f'Status code from RunPod status endpoint: {r.status_code}')
