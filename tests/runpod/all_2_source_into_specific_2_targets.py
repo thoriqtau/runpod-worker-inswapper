@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Replace both the faces from a source image containing 2 faces
-# into all the first 2 faces in a target image containing 3 faces
+# into 2 specific indexes in a target image containing 3 faces
+import sys
 import io
 import uuid
 import base64
@@ -8,12 +9,13 @@ import json
 import requests
 import time
 from PIL import Image
+from dotenv import dotenv_values
 
 
 SOURCE_IMAGE = '../../data/swap_src.jpeg'
 TARGET_IMAGE = '../../data/hp-3faces.jpeg'
 SOURCE_INDEXES = '-1'
-TARGET_INDEXES = '-1'
+TARGET_INDEXES = '0,2'  # Replace first face and last face (skipping middle face)
 BACKGROUND_ENHANCE = True
 FACE_RESTORE = False
 FACE_UPSAMPLE = True
@@ -40,7 +42,22 @@ def save_result_image(resp_json):
 
 
 if __name__ == '__main__':
-    base_url = f'http://127.0.0.1:8000'
+    env = dotenv_values('.env')
+    runpod_api_key = env.get('RUNPOD_API_KEY', None)
+    runpod_endpoint_id = env.get('RUNPOD_ENDPOINT_ID', None)
+    errors = []
+
+    if runpod_api_key is None:
+        errors.append('You need set RUNPOD_API_KEY in your .env file.')
+
+    if runpod_endpoint_id is None:
+        errors.append('You need set RUNPOD_ENDPOINT_ID in your .env file.')
+
+    if len(errors):
+        print('ERROR:\n', '\n '.join(errors))
+        sys.exit(1)
+
+    runpod_endpoint_base_url = f'https://api.runpod.ai/v2/{runpod_endpoint_id}'
 
     # Load the images and encode them to base64
     source_image_base64 = encode_image_to_base64(SOURCE_IMAGE)
@@ -63,7 +80,10 @@ if __name__ == '__main__':
     }
 
     r = requests.post(
-        f'{base_url}/runsync',
+        f'{runpod_endpoint_base_url}/runsync',
+        # headers={
+        #     'Authorization': f'Bearer {runpod_api_key}'
+        # },
         json=payload
     )
 
@@ -84,7 +104,10 @@ if __name__ == '__main__':
 
                 while request_in_queue:
                     r = requests.get(
-                        f'{base_url}/status/{request_id}',
+                        f'{runpod_endpoint_base_url}/status/{request_id}',
+                        # headers={
+                        #     'Authorization': f'Bearer {runpod_api_key}'
+                        # }
                     )
 
                     print(f'Status code from RunPod status endpoint: {r.status_code}')

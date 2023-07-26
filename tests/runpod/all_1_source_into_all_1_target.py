@@ -10,6 +10,7 @@ import time
 from PIL import Image
 from dotenv import dotenv_values
 
+
 SOURCE_IMAGE = '../../data/src.jpg'
 TARGET_IMAGE = '../../data/target.jpg'
 SOURCE_INDEXES = '-1'

@@ -38,7 +38,7 @@ def save_result_image(resp_json):
 
 
 if __name__ == '__main__':
-    runpod_endpoint_base_url = f'http://127.0.0.1:8000'
+    base_url = f'http://127.0.0.1:8000'
 
     # Load the images and encode them to base64
     source_image_base64 = encode_image_to_base64(SOURCE_IMAGE)
@@ -61,10 +61,7 @@ if __name__ == '__main__':
     }
 
     r = requests.post(
-        f'{runpod_endpoint_base_url}/runsync',
-        # headers={
-        #     'Authorization': f'Bearer {runpod_api_key}'
-        # },
+        f'{base_url}/runsync',
         json=payload
     )
 
@@ -85,10 +82,7 @@ if __name__ == '__main__':
 
                 while request_in_queue:
                     r = requests.get(
-                        f'{runpod_endpoint_base_url}/status/{request_id}',
-                        # headers={
-                        #     'Authorization': f'Bearer {runpod_api_key}'
-                        # }
+                        f'{base_url}/status/{request_id}',
                     )
 
                     print(f'Status code from RunPod status endpoint: {r.status_code}')
