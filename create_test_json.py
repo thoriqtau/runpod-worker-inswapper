@@ -2,8 +2,16 @@
 import base64
 import json
 
-SOURCE_IMAGE = 'data/src.png'
-TARGET_IMAGE = 'data/target.png'
+SOURCE_IMAGE = 'data/swap_src.jpeg'
+TARGET_IMAGE = 'data/swap_dest.jpeg'
+SOURCE_INDEXES = '-1'
+TARGET_INDEXES = '-1'
+BACKGROUND_ENHANCE = True
+FACE_RESTORE = False
+FACE_UPSAMPLE = True
+UPSCALE = 1
+CODEFORMER_FIDELITY = 0.5
+OUTPUT_FORMAT = 'JPEG'
 
 
 def encode_image_to_base64(image_path):
@@ -22,7 +30,15 @@ if __name__ == '__main__':
     payload = {
         "input": {
             "source_image": source_image_base64,
-            "target_image": target_image_base64
+            "target_image": target_image_base64,
+            "source_indexes": SOURCE_INDEXES,
+            "target_indexes": TARGET_INDEXES,
+            "background_enhance": BACKGROUND_ENHANCE,
+            "face_restore": FACE_RESTORE,
+            "face_upsample": FACE_UPSAMPLE,
+            "upscale": UPSCALE,
+            "codeformer_fidelity": CODEFORMER_FIDELITY,
+            "output_format": OUTPUT_FORMAT
         }
     }
 

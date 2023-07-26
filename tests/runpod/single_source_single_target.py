@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import io
 import uuid
 import base64
@@ -6,9 +7,18 @@ import json
 import requests
 import time
 from PIL import Image
+from dotenv import dotenv_values
 
-SOURCE_IMAGE = '../data/src.png'
-TARGET_IMAGE = '../data/target.png'
+SOURCE_IMAGE = '../../data/src.png'
+TARGET_IMAGE = '../../data/target.png'
+SOURCE_INDEXES = '-1'
+TARGET_INDEXES = '-1'
+BACKGROUND_ENHANCE = True
+FACE_RESTORE = False
+FACE_UPSAMPLE = True
+UPSCALE = 1
+CODEFORMER_FIDELITY = 0.5
+OUTPUT_FORMAT = 'JPEG'
 
 
 def encode_image_to_base64(image_path):
@@ -20,15 +30,31 @@ def encode_image_to_base64(image_path):
 
 def save_result_image(resp_json):
     img = Image.open(io.BytesIO(base64.b64decode(resp_json['output']['image'])))
-    output_file = f'{uuid.uuid4()}.jpg'
+    file_extension = 'jpeg' if OUTPUT_FORMAT == 'JPEG' else 'png'
+    output_file = f'{uuid.uuid4()}.{file_extension}'
 
     with open(output_file, 'wb') as f:
         print(f'Saving image: {output_file}')
-        img.save(f, format='JPEG')
+        img.save(f, format=OUTPUT_FORMAT)
 
 
 if __name__ == '__main__':
-    runpod_endpoint_base_url = f'http://127.0.0.1:8000'
+    env = dotenv_values('.env')
+    runpod_api_key = env.get('RUNPOD_API_KEY', None)
+    runpod_endpoint_id = env.get('RUNPOD_ENDPOINT_ID', None)
+    errors = []
+
+    if runpod_api_key is None:
+        errors.append('You need set RUNPOD_API_KEY in your .env file.')
+
+    if runpod_endpoint_id is None:
+        errors.append('You need set RUNPOD_ENDPOINT_ID in your .env file.')
+
+    if len(errors):
+        print('ERROR:\n', '\n '.join(errors))
+        sys.exit(1)
+
+    runpod_endpoint_base_url = f'https://api.runpod.ai/v2/{runpod_endpoint_id}'
 
     # Load the images and encode them to base64
     source_image_base64 = encode_image_to_base64(SOURCE_IMAGE)
@@ -38,15 +64,23 @@ if __name__ == '__main__':
     payload = {
         "input": {
             "source_image": source_image_base64,
-            "target_image": target_image_base64
+            "target_image": target_image_base64,
+            "source_indexes": SOURCE_INDEXES,
+            "target_indexes": TARGET_INDEXES,
+            "background_enhance": BACKGROUND_ENHANCE,
+            "face_restore": FACE_RESTORE,
+            "face_upsample": FACE_UPSAMPLE,
+            "upscale": UPSCALE,
+            "codeformer_fidelity": CODEFORMER_FIDELITY,
+            "output_format": OUTPUT_FORMAT
         }
     }
 
     r = requests.post(
         f'{runpod_endpoint_base_url}/runsync',
-        # headers={
-        #     'Authorization': f'Bearer {runpod_api_key}'
-        # },
+        headers={
+            'Authorization': f'Bearer {runpod_api_key}'
+        },
         json=payload
     )
 
@@ -68,9 +102,9 @@ if __name__ == '__main__':
                 while request_in_queue:
                     r = requests.get(
                         f'{runpod_endpoint_base_url}/status/{request_id}',
-                        # headers={
-                        #     'Authorization': f'Bearer {runpod_api_key}'
-                        # }
+                        headers={
+                            'Authorization': f'Bearer {runpod_api_key}'
+                        }
                     )
 
                     print(f'Status code from RunPod status endpoint: {r.status_code}')

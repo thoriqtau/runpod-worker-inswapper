@@ -26,10 +26,49 @@ INPUT_SCHEMA = {
         'type': str,
         'required': True
     },
-    'target_index': {
+    'source_indexes': {
+        'type': str,
+        'required': False,
+        'default': "-1"  # Default to using all faces in the source image
+    },
+    'target_indexes': {
+        'type': str,
+        'required': False,
+        'default': "-1"  # Default to swapping all faces in the target image
+    },
+    'background_enhance': {
+        'type': bool,
+        'required': False,
+        'default': True
+    },
+    'face_restore': {
+        'type': bool,
+        'required': False,
+        'default': True
+    },
+    'face_upsample': {
+        'type': bool,
+        'required': False,
+        'default': True
+    },
+    'upscale': {
         'type': int,
         'required': False,
-        'default': -1  # Default to swapping all faces in the target image
+        'default': 1
+    },
+    'codeformer_fidelity': {
+        'type': float,
+        'required': False,
+        'default': 0.5
+    },
+    'output_format': {
+        'type': str,
+        'required': False,
+        'default': 'JPEG',
+        'constraints': lambda output_format: output_format in [
+            'JPEG',
+            'PNG'
+        ]
     }
 }
 
@@ -234,7 +273,17 @@ def process(source_img: Union[Image.Image, List],
     return result_image
 
 
-def face_swap(src_img_path, target_img_path, target_index):
+def face_swap(src_img_path,
+              target_img_path,
+              source_indexes,
+              target_indexes,
+              background_enhance,
+              face_restore,
+              face_upsample,
+              upscale,
+              codeformer_fidelity,
+              output_format):
+
     source_img_paths = src_img_path.split(';')
     source_img = [Image.open(img_path) for img_path in source_img_paths]
     target_img = Image.open(target_img_path)
@@ -245,7 +294,13 @@ def face_swap(src_img_path, target_img_path, target_index):
 
     try:
         logger.info('Performing face swap')
-        result_image = process(source_img, target_img, target_index, model)
+        result_image = process(
+            source_img,
+            target_img,
+            source_indexes,
+            target_indexes,
+            model
+        )
         logger.info('Face swap complete')
     except Exception as e:
         raise
@@ -253,56 +308,54 @@ def face_swap(src_img_path, target_img_path, target_index):
     # make sure the ckpts downloaded successfully
     check_ckpts()
 
-    # https://huggingface.co/spaces/sczhou/CodeFormer
-    logger.info('Setting upsampler to RealESRGAN_x2plus')
-    upsampler = set_realesrgan()
+    if face_restore:
+        # https://huggingface.co/spaces/sczhou/CodeFormer
+        logger.info('Setting upsampler to RealESRGAN_x2plus')
+        upsampler = set_realesrgan()
 
-    if torch.cuda.is_available():
-        torch_device = 'cuda'
-    else:
-        torch_device = 'cpu'
+        if torch.cuda.is_available():
+            torch_device = 'cuda'
+        else:
+            torch_device = 'cpu'
 
-    logger.info(f'Torch device: {torch_device.upper()}')
-    device = torch.device(torch_device)
+        logger.info(f'Torch device: {torch_device.upper()}')
+        device = torch.device(torch_device)
 
-    codeformer_net = ARCH_REGISTRY.get('CodeFormer')(
-        dim_embd=512,
-        codebook_size=1024,
-        n_head=8,
-        n_layers=9,
-        connect_list=['32', '64', '128', '256'],
-    ).to(device)
+        codeformer_net = ARCH_REGISTRY.get('CodeFormer')(
+            dim_embd=512,
+            codebook_size=1024,
+            n_head=8,
+            n_layers=9,
+            connect_list=['32', '64', '128', '256'],
+        ).to(device)
 
-    ckpt_path = os.path.join(script_dir, 'CodeFormer/CodeFormer/weights/CodeFormer/codeformer.pth')
-    logger.info(f'Loading CodeFormer model: {ckpt_path}')
-    checkpoint = torch.load(ckpt_path)['params_ema']
-    codeformer_net.load_state_dict(checkpoint)
-    codeformer_net.eval()
-    result_image = cv2.cvtColor(np.array(result_image), cv2.COLOR_RGB2BGR)
-    background_enhance = True
-    face_upsample = True
-    upscale = 1
-    codeformer_fidelity = 0.5
-    logger.info('Performing face restoration using CodeFormer')
+        ckpt_path = os.path.join(script_dir, 'CodeFormer/CodeFormer/weights/CodeFormer/codeformer.pth')
+        logger.info(f'Loading CodeFormer model: {ckpt_path}')
+        checkpoint = torch.load(ckpt_path)['params_ema']
+        codeformer_net.load_state_dict(checkpoint)
+        codeformer_net.eval()
+        result_image = cv2.cvtColor(np.array(result_image), cv2.COLOR_RGB2BGR)
+        logger.info('Performing face restoration using CodeFormer')
 
-    try:
-        result_image = face_restoration(
-            result_image,
-            background_enhance,
-            face_upsample,
-            upscale,
-            codeformer_fidelity,
-            upsampler,
-            codeformer_net,
-            device
-        )
-    except Exception as e:
-        raise
+        try:
+            result_image = face_restoration(
+                result_image,
+                background_enhance,
+                face_upsample,
+                upscale,
+                codeformer_fidelity,
+                upsampler,
+                codeformer_net,
+                device
+            )
+        except Exception as e:
+            raise
 
-    logger.info('CodeFormer face restoration completed successfully')
-    result_image = Image.fromarray(result_image)
+        logger.info('CodeFormer face restoration completed successfully')
+        result_image = Image.fromarray(result_image)
+
     output_buffer = io.BytesIO()
-    result_image.save(output_buffer, format='JPEG')
+    result_image.save(output_buffer, format=output_format)
     image_data = output_buffer.getvalue()
 
     return base64.b64encode(image_data).decode('utf-8')
@@ -332,7 +385,6 @@ def face_swap_api(input):
     unique_id = uuid.uuid4()
     source_image_data = input['source_image']
     target_image_data = input['target_image']
-    target_index = input['target_index']
 
     # Decode the source image data
     source_image = base64.b64decode(source_image_data)
@@ -353,10 +405,26 @@ def face_swap_api(input):
         target_file.write(target_image)
 
     try:
+        logger.info(f'Source indexes: {input["source_indexes"]}')
+        logger.info(f'Target indexes: {input["target_indexes"]}')
+        logger.info(f'Background enhance: {input["background_enhance"]}')
+        logger.info(f'Face Restoration: {input["face_restore"]}')
+        logger.info(f'Face Upsampling: {input["face_upsample"]}')
+        logger.info(f'Upscale: {input["upscale"]}')
+        logger.info(f'Codeformer Fidelity: {input["codeformer_fidelity"]}')
+        logger.info(f'Output Format: {input["output_format"]}')
+
         result_image = face_swap(
             source_image_path,
             target_image_path,
-            target_index
+            input['source_indexes'],
+            input['target_indexes'],
+            input['background_enhance'],
+            input['face_restore'],
+            input['face_upsample'],
+            input['upscale'],
+            input['codeformer_fidelity'],
+            input['output_format']
         )
     except Exception as e:
         return {
@@ -388,7 +456,7 @@ def handler(event):
     return face_swap_api(validated_input['validated_input'])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logger.info('Starting RunPod Serverless...')
     runpod.serverless.start(
         {
