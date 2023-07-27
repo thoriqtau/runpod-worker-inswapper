@@ -12,65 +12,11 @@ from runpod.serverless.modules.rp_logger import RunPodLogger
 from typing import List, Union
 from PIL import Image
 from restoration import *
+from schemas.input import INPUT_SCHEMA
 
 TMP_PATH = '/tmp/inswapper'
 script_dir = os.path.dirname(os.path.abspath(__file__))
 logger = RunPodLogger()
-
-INPUT_SCHEMA = {
-    'source_image': {
-        'type': str,
-        'required': True
-    },
-    'target_image': {
-        'type': str,
-        'required': True
-    },
-    'source_indexes': {
-        'type': str,
-        'required': False,
-        'default': "-1"  # Default to using all faces in the source image
-    },
-    'target_indexes': {
-        'type': str,
-        'required': False,
-        'default': "-1"  # Default to swapping all faces in the target image
-    },
-    'background_enhance': {
-        'type': bool,
-        'required': False,
-        'default': True
-    },
-    'face_restore': {
-        'type': bool,
-        'required': False,
-        'default': True
-    },
-    'face_upsample': {
-        'type': bool,
-        'required': False,
-        'default': True
-    },
-    'upscale': {
-        'type': int,
-        'required': False,
-        'default': 1
-    },
-    'codeformer_fidelity': {
-        'type': float,
-        'required': False,
-        'default': 0.5
-    },
-    'output_format': {
-        'type': str,
-        'required': False,
-        'default': 'JPEG',
-        'constraints': lambda output_format: output_format in [
-            'JPEG',
-            'PNG'
-        ]
-    }
-}
 
 
 # ---------------------------------------------------------------------------- #
