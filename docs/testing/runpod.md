@@ -2,19 +2,23 @@
 
 ### Configure your RunPod Credentials
 
-1. Copy the `.env.example` file to `.env`:
+1. Change directory to the `tests/runpod` directory
+```bash
+cd tests/runpod
+```
+2. Copy the `.env.example` file to `.env`:
 ```bash
 cd tests
 cp .env.example .env
 ```
-2. Edit the `.env` file and add your RunPod API key to
+3. Edit the `.env` file and add your RunPod API key to
 `RUNPOD_API_KEY` and your RunPod Endpoint ID to
 `RUNPOD_ENDPOINT_ID`.
-3. Run the test script:
+4. Run one of the scripts, for example:
 ```bash
-python3 test_runpod_endpoint.py
+python3 all_1_source_into_all_1_target.py
 ```
-4. This will display the HTTP status code and the filename
+5. This will display the HTTP status code and the filename
    of the output image, for example:
 ```
 Status code: 200

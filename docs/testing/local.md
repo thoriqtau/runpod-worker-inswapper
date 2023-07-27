@@ -32,13 +32,13 @@ target images somewhere else on your system.
 
 1. Ensure that the RunPod Handler API is still running.
 2. Go the directory containing this worker code, activate the venv,
-   change directory to the `tests` directory and run the
-   `test_local_endpoint.py` script.
+   change directory to the `tests/local` directory and run
+   one of the scripts, for example:
 ```bash
 cd runpod-worker-inswapper
 source venv/bin/activate
-cd tests
-python3 test_local_endpoint.py
+cd tests/local
+python3 all_1_source_into_all_1_target.py
 ```
 3. This will display the HTTP status code and the filename
    of the output image, for example:
