@@ -44,9 +44,14 @@ was successful.
 
 ### RunPod API Examples
 
-* [Swap a face in a target image that has a single face](docs/api/single-face-target.md)
-* [Swap all the faces in the target image with the source face](docs/api/all-faces.md)
-* [Swap a specific face in the target image with the source face](docs/api/specific-face.md)
+* [Swap as many source faces as possible into as many target faces as possible](
+docs/api/swap-as-many-faces-as-possible.md)
+* [Swap a single source face into a specific target face in a target image containing multiple faces](
+docs/api/swap-single-source-face-into-specific-target-face.md)
+* [Swap two faces from source image into 2 specific target faces in a target image containing multiple faces](
+docs/api/swap-two-faces-into-specific-target-faces.md)
+* [Swap two specific faces from source image containing multiple faces into 2 specific target faces in a target image containing multiple faces](
+  docs/api/swap-specific-faces-into-specific-target-faces.md)
 
 ### Endpoint Status Codes
 

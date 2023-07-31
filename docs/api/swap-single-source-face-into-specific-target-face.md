@@ -1,18 +1,26 @@
-# Swap a specific face in the target image with the source face
+# Swap a single source face into a specific target face in a target image containing multiple faces
 
 ## Request
 
 `target_index` is used to specify the index of the face that
 should be replaced in a target image that has multiple faces,
 for example `0` would be the first face, `1` would be the second
-face, and so on.
+face, and so on.  In the example payload below, the second
+face will be swapped in the target image.
 
 ```json
 {
   "input": {
     "source_image": "base64 encoded source image content",
     "target_image": "base64 encoded target image content",
-    "target_index": 1
+    "source_indexes": "-1",
+    "target_indexes": "1",
+    "background_enhance": true,
+    "face_restore": true,
+    "face_upsample": true,
+    "upscale": 1,
+    "codeformer_fidelity": 0.5,
+    "output_format": "JPEG"
   }
 }
 ```
