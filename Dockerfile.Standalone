@@ -46,7 +46,7 @@ RUN git clone https://github.com/ashleykleynhans/runpod-worker-inswapper.git && 
     source venv/bin/activate && \
     pip3 install -r requirements.txt && \
     mkdir checkpoints && \
-    wget -O ./checkpoints/inswapper_128.onnx https://huggingface.co/deepinsight/inswapper/resolve/main/inswapper_128.onnx && \
+    wget -O ./checkpoints/inswapper_128.onnx https://huggingface.co/ashleykleynhans/inswapper/resolve/main/inswapper_128.onnx && \
     git lfs install && \
     git clone https://huggingface.co/spaces/sczhou/CodeFormer && \
     python3 create_test_json.py && \

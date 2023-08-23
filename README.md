@@ -7,9 +7,8 @@ swapping AI tasks.
 
 ## Model
 
-The worker uses the [inswapper_128.onnx](
-https://huggingface.co/deepinsight/inswapper/resolve/main/inswapper_128.onnx)
-model by [InsightFace](https://insightface.ai/).
+The worker uses the `inswapper_128.onnx` model by [InsightFace](
+https://insightface.ai/).
 
 ## Testing
 
