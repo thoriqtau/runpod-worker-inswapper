@@ -10,6 +10,15 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
+## Install the Models
+
+```bash
+mkdir checkpoints
+wget -O ./checkpoints/inswapper_128.onnx https://huggingface.co/ashleykleynhans/inswapper/resolve/main/inswapper_128.onnx && \
+git lfs install
+git clone https://huggingface.co/spaces/sczhou/CodeFormer 
+```
+
 ## Start the local RunPod Handler API
 
 Use `--rp_serve_api` command line argument to serve the API locally.
