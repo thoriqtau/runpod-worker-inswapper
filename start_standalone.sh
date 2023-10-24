@@ -14,4 +14,4 @@ ln -s /runpod-volume/.insightface /root/.insightface
 echo "Starting RunPod Handler"
 export PYTHONUNBUFFERED=1
 cd /workspace/runpod-worker-inswapper
-python -u rp_handler.py
+python3 -u rp_handler.py
