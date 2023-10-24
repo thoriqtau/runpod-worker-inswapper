@@ -17,6 +17,7 @@ git clone https://github.com/ashleykleynhans/runpod-worker-inswapper.git
 cd runpod-worker-inswapper
 python3 -m venv venv
 source venv/bin/activate
+pip3 install --no-cache-dir torch==2.0.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip3 install -r requirements.txt
 mkdir checkpoints
 wget -O ./checkpoints/inswapper_128.onnx https://huggingface.co/ashleykleynhans/inswapper/resolve/main/inswapper_128.onnx
