@@ -373,17 +373,13 @@ def face_swap_api(input):
             input['output_format']
         )
     except Exception as e:
-        return {
-            'status': 'error',
-            'message': str(e)
-        }
+        raise
 
     # Clean up temporary images
     os.remove(source_image_path)
     os.remove(target_image_path)
 
     return {
-        'status': 'ok',
         'image': result_image
     }
 
