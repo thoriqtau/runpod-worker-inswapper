@@ -20,7 +20,7 @@ source venv/bin/activate
 pip3 install --no-cache-dir torch==2.0.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip3 install -r requirements.txt
 mkdir checkpoints
-wget -O ./checkpoints/inswapper_128.onnx https://huggingface.co/ashleykleynhans/inswapper/resolve/main/inswapper_128.onnx
+wget -O ./checkpoints/inswapper_128.onnx https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx
 apt update
 apt -y install git-lfs
 git lfs install
