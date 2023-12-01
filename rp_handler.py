@@ -6,6 +6,7 @@ import copy
 import cv2
 import insightface
 import numpy as np
+import traceback
 import runpod
 from runpod.serverless.utils.rp_validator import validate
 from runpod.serverless.modules.rp_logger import RunPodLogger
@@ -373,7 +374,12 @@ def face_swap_api(input):
             input['output_format']
         )
     except Exception as e:
-        raise
+        logger.error(f'An exception was raised: {e}')
+
+        return {
+            'error': traceback.format_exc(),
+            'refresh_worker': True
+        }
 
     # Clean up temporary images
     os.remove(source_image_path)
