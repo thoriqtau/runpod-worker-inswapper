@@ -58,4 +58,4 @@ COPY start_standalone.sh /start.sh
 
 # Start the container
 RUN chmod +x /start.sh
-CMD /start.sh
+ENTRYPOINT /start.sh
