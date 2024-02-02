@@ -30,7 +30,11 @@ def get_face_swap_model(model_path: str):
 
 def get_face_analyser(model_path: str,
                       det_size=(320, 320)):
-    face_analyser = insightface.app.FaceAnalysis(name="buffalo_l", root="./checkpoints")
+    face_analyser = insightface.app.FaceAnalysis(
+        name="buffalo_l",
+        root="./checkpoints",
+        providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
+    )
     face_analyser.prepare(ctx_id=0, det_size=det_size)
     return face_analyser
 
