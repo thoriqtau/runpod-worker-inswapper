@@ -43,6 +43,7 @@ RUN pip3 install --no-cache-dir torch==2.2.0 torchvision torchaudio --index-url 
 # 3. Install git LFS and clone CodeFormer face restoration repo
 # 4. Create test_input.json file for test inference
 # 5. Run test inference using rp_handler.py to cache the models
+# 6. Uninstall onnxruntime and install onnxruntime-gpu instead
 WORKDIR /workspace
 RUN git clone https://github.com/ashleykleynhans/runpod-worker-inswapper.git && \
     cd runpod-worker-inswapper && \
@@ -52,7 +53,9 @@ RUN git clone https://github.com/ashleykleynhans/runpod-worker-inswapper.git && 
     git lfs install && \
     git clone https://huggingface.co/spaces/sczhou/CodeFormer && \
     python3 create_test_json.py && \
-    python3 -u rp_handler.py
+    python3 -u rp_handler.py && \
+    pip3 uninstall onnxruntime && \
+    pip3 install onnxruntime-gpu
 
 # Copy handler to ensure its the latest
 COPY --chmod=755 rp_handler.py /workspace/rp_handler.py
