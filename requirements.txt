@@ -7,7 +7,7 @@ lmdb
 lpips
 numpy
 onnx>=1.14.0
-onnxruntime
+onnxruntime-gpu
 opencv-python
 protobuf
 scikit-image
