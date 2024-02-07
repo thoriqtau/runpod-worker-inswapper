@@ -26,6 +26,8 @@ pip3 install --no-cache-dir torch==${TORCH_VERSION} torchvision torchaudio --ind
 
 echo "Installing Inswapper Serverless Worker"
 pip3 install -r requirements.txt
+pip3 uninstall -y onnxruntime
+pip3 install onnxruntime-gpu
 
 echo "Downloading checkpoints"
 mkdir checkpoints

@@ -34,10 +34,10 @@ automatic installation script above.
 
 1. Install the Serverless Worker:
 ```bash
-# Deleting Inswapper Serverless Worker
+# Delete Inswapper Serverless Worker
 rm -rf /workspace/runpod-worker-inswapper
 
-# Deleting venv
+# Delete venv
 rm -rf /workspace/venv
 
 # Clone Inswapper Serverless Worker repo to /workspace
@@ -56,8 +56,10 @@ source /workspace/venv/bin/activate
 # Install Torch
 pip3 install --no-cache-dir torch==2.2.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
-# Installing Inswapper Serverless Worker Requirements
+# Install Inswapper Serverless Worker Requirements
 pip3 install -r requirements.txt
+pip3 uninstall -y onnxruntime
+pip3 install onnxruntime-gpu
 ```
 2. Download the checkpoints:
 ```bash
