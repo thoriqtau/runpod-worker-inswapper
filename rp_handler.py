@@ -97,7 +97,11 @@ def process(source_img: Union[Image.Image, List],
     num_source_images = len(source_img)
 
     if target_faces is not None:
+        if num_target_faces == 0:
+            raise Exception('The target image does not contain any faces!')
+
         temp_frame = copy.deepcopy(target_img)
+
         if isinstance(source_img, list) and num_source_images == num_target_faces:
             logger.info('Replacing the faces in the target image from left to right by order')
             for i in range(num_target_faces):
@@ -123,7 +127,7 @@ def process(source_img: Union[Image.Image, List],
             logger.info(f'Source faces: {num_source_faces}')
             logger.info(f'Target faces: {num_target_faces}')
 
-            if source_faces is None:
+            if source_faces is None or num_source_faces == 0:
                 raise Exception('No source faces found!')
 
             if target_indexes == "-1":
@@ -381,7 +385,8 @@ def face_swap_api(input):
         logger.error(f'An exception was raised: {e}')
 
         return {
-            'error': traceback.format_exc(),
+            'error': str(e),
+            'output': traceback.format_exc(),
             'refresh_worker': True
         }
 
