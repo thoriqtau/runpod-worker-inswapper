@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Replace the single source face into all 3 target faces
+# Replace the single source face into the first face in the target image
 from util import post_request, encode_image_to_base64
 
 SOURCE_IMAGE = '../data/src.jpg'

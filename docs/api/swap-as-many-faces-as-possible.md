@@ -7,7 +7,7 @@ This payload can handle any of the following conditions:
 1. Swapping a face from a source image that contains a single
    face into a target image that contains a single face.
 2. Swapping a face from a source image that contains a single
-   face into all of the faces in a target image that contains
+   face into the first face in a target image that contains
    multiple faces.
 3. Swapping all of the faces from a source image containing
    multiple faces into the faces of a target image containing
