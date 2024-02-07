@@ -6,13 +6,12 @@ insightface>=0.7.3
 lmdb
 lpips
 numpy
+onnx>=1.14.0
 onnxruntime
 opencv-python
-pillow>=9.5.0
-protobuf>=4.23.2
+protobuf
 scikit-image
 scipy
-tb-nightly
 torch
 torchvision
 tqdm
