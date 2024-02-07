@@ -6,7 +6,7 @@ but will obviously create a more bulky Docker image as a result.
 
 You can either use my pre-built Docker image:
 ```
-ashleykza/runpod-worker-inswapper:standalone-1.2.2
+ashleykza/runpod-worker-inswapper:standalone-1.4.4
 ```
 
 Or alternatively, you can build it yourself by following the

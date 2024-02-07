@@ -90,7 +90,7 @@ You can either build this Docker image yourself, your alternatively,
 you can use my pre-built image:
 
 ```
-ashleykza/runpod-worker-inswapper:1.4.0
+ashleykza/runpod-worker-inswapper:1.4.4
 ```
 
 1. Sign up for a Docker hub account if you don't already have one.
