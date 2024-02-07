@@ -29,12 +29,20 @@ def get_face_swap_model(model_path: str):
 
 
 def get_face_analyser(model_path: str,
+                      torch_device: str,
                       det_size=(320, 320)):
+
+    if torch_device == 'cuda':
+        providers=['CUDAExecutionProvider']
+    else:
+        providers=['CPUExecutionProvider']
+
     face_analyser = insightface.app.FaceAnalysis(
         name="buffalo_l",
         root="./checkpoints",
-        providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
+        providers=providers
     )
+
     face_analyser.prepare(ctx_id=0, det_size=det_size)
     return face_analyser
 
@@ -79,10 +87,11 @@ def process(source_img: Union[Image.Image, List],
             target_img: Image.Image,
             source_indexes: str,
             target_indexes: str,
-            model: str):
+            model: str,
+            torch_device: str):
 
     # load face_analyser
-    face_analyser = get_face_analyser(model)
+    face_analyser = get_face_analyser(model, torch_device)
 
     # load face_swapper
     model_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), model)
@@ -247,6 +256,13 @@ def face_swap(src_img_path,
     model = os.path.join(script_dir, 'checkpoints/inswapper_128.onnx')
     logger.info(f'Face swap mode: {model}')
 
+    if torch.cuda.is_available():
+        torch_device = 'cuda'
+    else:
+        torch_device = 'cpu'
+
+    logger.info(f'Torch device: {torch_device.upper()}')
+
     try:
         logger.info('Performing face swap')
         result_image = process(
@@ -254,7 +270,8 @@ def face_swap(src_img_path,
             target_img,
             source_indexes,
             target_indexes,
-            model
+            model,
+            torch_device
         )
         logger.info('Face swap complete')
     except Exception as e:
@@ -267,13 +284,6 @@ def face_swap(src_img_path,
         # https://huggingface.co/spaces/sczhou/CodeFormer
         logger.info('Setting upsampler to RealESRGAN_x2plus')
         upsampler = set_realesrgan()
-
-        if torch.cuda.is_available():
-            torch_device = 'cuda'
-        else:
-            torch_device = 'cpu'
-
-        logger.info(f'Torch device: {torch_device.upper()}')
         device = torch.device(torch_device)
 
         codeformer_net = ARCH_REGISTRY.get('CodeFormer')(
