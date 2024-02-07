@@ -15,7 +15,7 @@ INPUT_SCHEMA = {
     'target_indexes': {
         'type': str,
         'required': False,
-        'default': "-1"  # Default to swapping all faces in the target image
+        'default': "-1"  # Default to swapping as many faces in the target image as there are in the source image
     },
     'background_enhance': {
         'type': bool,

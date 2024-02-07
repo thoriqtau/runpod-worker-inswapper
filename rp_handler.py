@@ -128,13 +128,13 @@ def process(source_img: Union[Image.Image, List],
 
             if target_indexes == "-1":
                 if num_source_faces == 1:
-                    logger.info('Replacing all faces in target image with the same face from the source image')
-                    num_iterations = num_target_faces
+                    logger.info('Replacing the first face in the target image with the face from the source image')
+                    num_iterations = num_source_faces
                 elif num_source_faces < num_target_faces:
-                    logger.info('There are less faces in the source image than the target image, replacing as many as we can')
+                    logger.info(f'There are less faces in the source image than the target image, replacing the first {num_source_faces} faces')
                     num_iterations = num_source_faces
                 elif num_target_faces < num_source_faces:
-                    logger.info('There are less faces in the target image than the source image, replacing as many as we can')
+                    logger.info(f'There are less faces in the target image than the source image, replacing {num_target_faces} faces')
                     num_iterations = num_target_faces
                 else:
                     logger.info('Replacing all faces in the target image with the faces from the source image')
