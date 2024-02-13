@@ -343,6 +343,11 @@ def determine_file_extension(image_data):
     return image_extension
 
 
+def clean_up_temporary_files(source_image_path: str, target_image_path: str):
+    os.remove(source_image_path)
+    os.remove(target_image_path)
+
+
 def face_swap_api(input):
     if not os.path.exists(TMP_PATH):
         os.makedirs(TMP_PATH)
@@ -391,22 +396,21 @@ def face_swap_api(input):
             input['codeformer_fidelity'],
             input['output_format']
         )
+
+        clean_up_temporary_files(source_image_path, target_image_path)
+
+        return {
+            'image': result_image
+        }
     except Exception as e:
         logger.error(f'An exception was raised: {e}')
+        clean_up_temporary_files(source_image_path, target_image_path)
 
         return {
             'error': str(e),
             'output': traceback.format_exc(),
             'refresh_worker': True
         }
-
-    # Clean up temporary images
-    os.remove(source_image_path)
-    os.remove(target_image_path)
-
-    return {
-        'image': result_image
-    }
 
 
 # ---------------------------------------------------------------------------- #
