@@ -58,7 +58,8 @@ RUN mkdir -p checkpoints/models && \
     unzip ../buffalo_l.zip
 
 # Install CodeFormer
-RUN git lfs install && \
+RUN cd /workspace/runpod-worker-inswapper &&
+    git lfs install && \
     git clone https://huggingface.co/spaces/sczhou/CodeFormer
 
 # Copy handler to ensure its the latest
