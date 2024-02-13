@@ -15,8 +15,8 @@ from PIL import Image
 from restoration import *
 from schemas.input import INPUT_SCHEMA
 
+FACE_SWAP_MODEL = 'checkpoints/inswapper_128.onnx'
 TMP_PATH = '/tmp/inswapper'
-script_dir = os.path.dirname(os.path.abspath(__file__))
 logger = RunPodLogger()
 
 
@@ -68,8 +68,7 @@ def get_many_faces(face_analyser,
         return None
 
 
-def swap_face(face_swapper,
-              source_faces,
+def swap_face(source_faces,
               target_faces,
               source_index,
               target_index,
@@ -77,31 +76,23 @@ def swap_face(face_swapper,
     """
     paste source_face on target image
     """
+    global FACE_SWAPPER
+
     source_face = source_faces[source_index]
     target_face = target_faces[target_index]
 
-    return face_swapper.get(temp_frame, target_face, source_face, paste_back=True)
+    return FACE_SWAPPER.get(temp_frame, target_face, source_face, paste_back=True)
 
 
 def process(source_img: Union[Image.Image, List],
             target_img: Image.Image,
             source_indexes: str,
-            target_indexes: str,
-            model: str,
-            torch_device: str):
+            target_indexes: str):
 
-    # load face_analyser
-    face_analyser = get_face_analyser(model, torch_device)
+    global MODEL, FACE_ANALYSER
 
-    # load face_swapper
-    model_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), model)
-    face_swapper = get_face_swap_model(model_path)
-
-    # read target image
     target_img = cv2.cvtColor(np.array(target_img), cv2.COLOR_RGB2BGR)
-
-    # detect faces that will be replaced in target_img
-    target_faces = get_many_faces(face_analyser, target_img)
+    target_faces = get_many_faces(FACE_ANALYSER, target_img)
     num_target_faces = len(target_faces)
     num_source_images = len(source_img)
 
@@ -114,7 +105,7 @@ def process(source_img: Union[Image.Image, List],
         if isinstance(source_img, list) and num_source_images == num_target_faces:
             logger.info('Replacing the faces in the target image from left to right by order')
             for i in range(num_target_faces):
-                source_faces = get_many_faces(face_analyser, cv2.cvtColor(np.array(source_img[i]), cv2.COLOR_RGB2BGR))
+                source_faces = get_many_faces(FACE_ANALYSER, cv2.cvtColor(np.array(source_img[i]), cv2.COLOR_RGB2BGR))
                 source_index = i
                 target_index = i
 
@@ -122,7 +113,6 @@ def process(source_img: Union[Image.Image, List],
                     raise Exception('No source faces found!')
 
                 temp_frame = swap_face(
-                    face_swapper,
                     source_faces,
                     target_faces,
                     source_index,
@@ -131,7 +121,7 @@ def process(source_img: Union[Image.Image, List],
                 )
         elif num_source_images == 1:
             # detect source faces that will be replaced into the target image
-            source_faces = get_many_faces(face_analyser, cv2.cvtColor(np.array(source_img[0]), cv2.COLOR_RGB2BGR))
+            source_faces = get_many_faces(FACE_ANALYSER, cv2.cvtColor(np.array(source_img[0]), cv2.COLOR_RGB2BGR))
             num_source_faces = len(source_faces)
             logger.info(f'Source faces: {num_source_faces}')
             logger.info(f'Target faces: {num_target_faces}')
@@ -158,7 +148,6 @@ def process(source_img: Union[Image.Image, List],
                     target_index = i
 
                     temp_frame = swap_face(
-                        face_swapper,
                         source_faces,
                         target_faces,
                         source_index,
@@ -174,7 +163,6 @@ def process(source_img: Union[Image.Image, List],
                     target_index = int(target_index)
 
                     temp_frame = swap_face(
-                        face_swapper,
                         source_faces,
                         target_faces,
                         source_index,
@@ -218,7 +206,6 @@ def process(source_img: Union[Image.Image, List],
                             raise ValueError(f'Target index {target_index} is higher than the number of faces in the target image')
 
                         temp_frame = swap_face(
-                            face_swapper,
                             source_faces,
                             target_faces,
                             source_index,
@@ -248,20 +235,11 @@ def face_swap(src_img_path,
               codeformer_fidelity,
               output_format):
 
+    global TORCH_DEVICE, CODEFORMER_DEVICE, CODEFORMER_NET
+
     source_img_paths = src_img_path.split(';')
     source_img = [Image.open(img_path) for img_path in source_img_paths]
     target_img = Image.open(target_img_path)
-
-    # download from https://huggingface.co/deepinsight/inswapper/tree/main
-    model = os.path.join(script_dir, 'checkpoints/inswapper_128.onnx')
-    logger.info(f'Face swap mode: {model}')
-
-    if torch.cuda.is_available():
-        torch_device = 'cuda'
-    else:
-        torch_device = 'cpu'
-
-    logger.info(f'Torch device: {torch_device.upper()}')
 
     try:
         logger.info('Performing face swap')
@@ -269,36 +247,13 @@ def face_swap(src_img_path,
             source_img,
             target_img,
             source_indexes,
-            target_indexes,
-            model,
-            torch_device
+            target_indexes
         )
         logger.info('Face swap complete')
     except Exception as e:
         raise
 
-    # make sure the ckpts downloaded successfully
-    check_ckpts()
-
     if face_restore:
-        # https://huggingface.co/spaces/sczhou/CodeFormer
-        logger.info('Setting upsampler to RealESRGAN_x2plus')
-        upsampler = set_realesrgan()
-        device = torch.device(torch_device)
-
-        codeformer_net = ARCH_REGISTRY.get('CodeFormer')(
-            dim_embd=512,
-            codebook_size=1024,
-            n_head=8,
-            n_layers=9,
-            connect_list=['32', '64', '128', '256'],
-        ).to(device)
-
-        ckpt_path = os.path.join(script_dir, 'CodeFormer/CodeFormer/weights/CodeFormer/codeformer.pth')
-        logger.info(f'Loading CodeFormer model: {ckpt_path}')
-        checkpoint = torch.load(ckpt_path)['params_ema']
-        codeformer_net.load_state_dict(checkpoint)
-        codeformer_net.eval()
         result_image = cv2.cvtColor(np.array(result_image), cv2.COLOR_RGB2BGR)
         logger.info('Performing face restoration using CodeFormer')
 
@@ -310,8 +265,8 @@ def face_swap(src_img_path,
                 upscale,
                 codeformer_fidelity,
                 upsampler,
-                codeformer_net,
-                device
+                CODEFORMER_NET,
+                CODEFORMER_DEVICE
             )
         except Exception as e:
             raise
@@ -327,8 +282,6 @@ def face_swap(src_img_path,
 
 
 def determine_file_extension(image_data):
-    image_extension = None
-
     try:
         if image_data.startswith('/9j/'):
             image_extension = '.jpg'
@@ -428,6 +381,42 @@ def handler(event):
 
 
 if __name__ == '__main__':
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    MODEL = os.path.join(script_dir, FACE_SWAP_MODEL)
+    model_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), MODEL)
+    logger.info(f'Face swap model: {MODEL}')
+
+    if torch.cuda.is_available():
+        TORCH_DEVICE = 'cuda'
+    else:
+        TORCH_DEVICE = 'cpu'
+
+    logger.info(f'Torch device: {TORCH_DEVICE.upper()}')
+    FACE_ANALYSER = get_face_analyser(MODEL, TORCH_DEVICE)
+    FACE_SWAPPER = get_face_swap_model(model_path)
+
+    # Ensure that CodeFormer weights have been successfully downloaded,
+    # otherwise download them
+    check_ckpts()
+
+    logger.info('Setting upsampler to RealESRGAN_x2plus')
+    upsampler = set_realesrgan()
+    CODEFORMER_DEVICE = torch.device(TORCH_DEVICE)
+
+    CODEFORMER_NET = ARCH_REGISTRY.get('CodeFormer')(
+        dim_embd=512,
+        codebook_size=1024,
+        n_head=8,
+        n_layers=9,
+        connect_list=['32', '64', '128', '256'],
+    ).to(CODEFORMER_DEVICE)
+
+    ckpt_path = os.path.join(script_dir, 'CodeFormer/CodeFormer/weights/CodeFormer/codeformer.pth')
+    logger.info(f'Loading CodeFormer model: {ckpt_path}')
+    codeformer_checkpoint = torch.load(ckpt_path)['params_ema']
+    CODEFORMER_NET.load_state_dict(codeformer_checkpoint)
+    CODEFORMER_NET.eval()
+
     logger.info('Starting RunPod Serverless...')
     runpod.serverless.start(
         {
