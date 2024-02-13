@@ -49,6 +49,9 @@ cd runpod-worker-inswapper
 apt update
 apt -y upgrade
 
+# Install git-lfs and unzip Ubuntu packages
+apt -y install git-lfs unzip
+
 # Create and activate venv
 python3 -m venv /workspace/venv
 source /workspace/venv/bin/activate
@@ -61,27 +64,35 @@ pip3 install -r requirements.txt
 pip3 uninstall -y onnxruntime
 pip3 install onnxruntime-gpu
 ```
-2. Download the checkpoints:
+2. Download the insightface checkpoints:
 ```bash
-mkdir checkpoints
-wget -O ./checkpoints/inswapper_128.onnx https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx
-apt -y install git-lfs
+mkdir -p checkpoints/models
+cd checkpoints
+wget -O inswapper_128.onnx https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx
+cd models
+wget https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip
+mkdir buffalo_l
+cd buffalo_l
+unzip ../buffalo_l.zip
+```
+3. Install CodeFormer:
+```bash
+cd /workspace/runpod-worker-inswapper
 git lfs install
 git clone https://huggingface.co/spaces/sczhou/CodeFormer
 ```
-3. Edit the `create_test_json.py` file and ensure that you set `SOURCE_IMAGE` to
-   a valid image to upscale (you can upload the image to your pod using
-   [runpodctl](https://github.com/runpod/runpodctl/releases)).
-4. Create the `test_input.json` file by running the `create_test_json.py` script:
+4. Download CodeFormer weights:
 ```bash
-python3 create_test_json.py
+cd /workspace/runpod-worker-inswapper
+mkdir -p CodeFormer/CodeFormer/weights/CodeFormer
+wget -O CodeFormer/CodeFormer/weights/CodeFormer/codeformer.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth"
+mkdir -p CodeFormer/CodeFormer/weights/facelib
+wget -O CodeFormer/CodeFormer/weights/facelib/detection_Resnet50_Final.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/detection_Resnet50_Final.pth"
+wget -O CodeFormer/CodeFormer/weights/facelib/parsing_parsenet.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/parsing_parsenet.pth"
+mkdir -p CodeFormer/CodeFormer/weights/realesrgan
+wget -O CodeFormer/CodeFormer/weights/realesrgan/RealESRGAN_x2plus.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/RealESRGAN_x2plus.pth"
 ```
-5. Run an inference on the `test_input.json` input so that the models can be cached on
-   your Network Volume, which will dramatically reduce cold start times for RunPod Serverless:
-```bash
-python3 -u rp_handler.py
-```
-6. Create logs directory:
+5. Create logs directory:
 ```bash
 mkdir -p /workspace/logs
 ```

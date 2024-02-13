@@ -46,3 +46,16 @@ echo "Installing CodeFormer"
 cd /workspace/runpod-worker-inswapper
 git lfs install
 git clone https://huggingface.co/spaces/sczhou/CodeFormer
+
+echo "Downloading CodeFormer weights"
+cd /workspace/runpod-worker-inswapper
+mkdir -p CodeFormer/CodeFormer/weights/CodeFormer
+wget -O CodeFormer/CodeFormer/weights/CodeFormer/codeformer.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth"
+mkdir -p CodeFormer/CodeFormer/weights/facelib
+wget -O CodeFormer/CodeFormer/weights/facelib/detection_Resnet50_Final.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/detection_Resnet50_Final.pth"
+wget -O CodeFormer/CodeFormer/weights/facelib/parsing_parsenet.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/parsing_parsenet.pth"
+mkdir -p CodeFormer/CodeFormer/weights/realesrgan
+wget -O CodeFormer/CodeFormer/weights/realesrgan/RealESRGAN_x2plus.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/RealESRGAN_x2plus.pth"
+
+echo "Creating logs directory"
+mkdir -p /workspace/logs
