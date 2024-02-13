@@ -17,6 +17,9 @@ echo "Installing Ubuntu updates"
 apt update
 apt -y upgrade
 
+echo "Installing git-lfs and unzip Ubuntu packages"
+apt -y install git-lfs unzip
+
 echo "Creating and activating venv"
 python3 -m venv /workspace/venv
 source /workspace/venv/bin/activate
@@ -29,13 +32,17 @@ pip3 install -r requirements.txt
 pip3 uninstall -y onnxruntime
 pip3 install onnxruntime-gpu
 
-echo "Downloading checkpoints"
-mkdir checkpoints
-wget -O ./checkpoints/inswapper_128.onnx https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx
-apt -y install git-lfs
+echo "Downloading insightface checkpoints"
+mkdir -p checkpoints/models
+cd checkpoints
+wget -O inswapper_128.onnx https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx
+cd models
+wget https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip
+mkdir buffalo_l
+cd buffalo_l
+unzip ../buffalo_l.zip
+
+echo "Installing CodeFormer"
+cd /workspace/runpod-worker-inswapper
 git lfs install
 git clone https://huggingface.co/spaces/sczhou/CodeFormer
-
-echo "Running handler using test_input.json to download remaining checkpoints"
-python3 create_test_json.py
-python3 -u rp_handler.py
