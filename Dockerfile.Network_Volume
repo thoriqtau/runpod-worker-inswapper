@@ -27,6 +27,7 @@ RUN apt update && \
       libxrender1 \
       libxext6 \
       ffmpeg \
+      unzip \
       libgoogle-perftools-dev \
       procps && \
     apt-get autoremove -y && \

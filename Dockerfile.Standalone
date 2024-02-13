@@ -29,6 +29,7 @@ RUN apt update && \
       libxrender1 \
       libxext6 \
       ffmpeg \
+      unzip \
       libgoogle-perftools-dev \
       procps && \
     apt-get autoremove -y && \
@@ -38,27 +39,30 @@ RUN apt update && \
 # Install Torch
 RUN pip3 install --no-cache-dir torch==2.2.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
-# 1. Clone the worker repo
-# 2. Create checkpoints directory and install inswapper model
-# 3. Install git LFS and clone CodeFormer face restoration repo
-# 4. Create test_input.json file for test inference
-# 5. Run test inference using rp_handler.py to cache the models
-# 6. Uninstall onnxruntime and install onnxruntime-gpu instead
-WORKDIR /workspace
+# Install Inswapper Serverless Worker
 RUN git clone https://github.com/ashleykleynhans/runpod-worker-inswapper.git && \
     cd runpod-worker-inswapper && \
-    pip3 install -r requirements.txt && \
-    mkdir checkpoints && \
-    wget -O ./checkpoints/inswapper_128.onnx https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx && \
-    git lfs install && \
-    git clone https://huggingface.co/spaces/sczhou/CodeFormer && \
-    python3 create_test_json.py && \
-    python3 -u rp_handler.py && \
+    pip3 install -r requirements.txt \
     pip3 uninstall -y onnxruntime && \
     pip3 install onnxruntime-gpu
 
+# Download insightface checkpoints
+WORKDIR /workspace/runpod-worker-inswapper
+RUN mkdir -p checkpoints/models && \
+    cd checkpoints && \
+    wget -O inswapper_128.onnx https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx && \
+    cd models && \
+    wget https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip && \
+    mkdir buffalo_l && \
+    cd buffalo_l && \
+    unzip ../buffalo_l.zip
+
+# Install CodeFormer
+RUN git lfs install && \
+    git clone https://huggingface.co/spaces/sczhou/CodeFormer
+
 # Copy handler to ensure its the latest
-COPY --chmod=755 rp_handler.py /workspace/rp_handler.py
+COPY --chmod=755 rp_handler.py /workspace/runpod-worker-inswapper/rp_handler.py
 
 # Docker container start script
 COPY --chmod=755 start_standalone.sh /start.sh
