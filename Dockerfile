@@ -79,7 +79,7 @@ RUN cd /workspace/runpod-worker-inswapper && \
 COPY --chmod=755 rp_handler.py /workspace/runpod-worker-inswapper/rp_handler.py
 
 # Docker container start script
-COPY --chmod=755 start_standalone.sh /start.sh
+COPY --chmod=755 start.sh /start.sh
 
 # Start the container
 ENTRYPOINT /start.sh
