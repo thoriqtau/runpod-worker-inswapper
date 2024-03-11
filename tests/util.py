@@ -54,7 +54,7 @@ def handle_response(resp_json, timer):
     print(f'Total time taken for RunPod Serverless API call {total_time} seconds')
 
 
-def post_request(payload):
+def post_request(payload, runtype='runsync'):
     timer = Timer()
     env = dotenv_values('.env')
     runpod_api_key = env.get('RUNPOD_API_KEY', None)
@@ -66,7 +66,7 @@ def post_request(payload):
         base_url = f'http://127.0.0.1:8000'
 
     r = requests.post(
-        f'{base_url}/run',
+        f'{base_url}/{runtype}',
         headers={
             'Authorization': f'Bearer {runpod_api_key}'
         },
