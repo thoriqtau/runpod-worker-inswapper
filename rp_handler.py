@@ -84,7 +84,8 @@ def swap_face(source_faces,
     return FACE_SWAPPER.get(temp_frame, target_face, source_face, paste_back=True)
 
 
-def process(source_img: Union[Image.Image, List],
+def process(job_id: str,
+            source_img: Union[Image.Image, List],
             target_img: Image.Image,
             source_indexes: str,
             target_indexes: str):
@@ -103,7 +104,7 @@ def process(source_img: Union[Image.Image, List],
         temp_frame = copy.deepcopy(target_img)
 
         if isinstance(source_img, list) and num_source_images == num_target_faces:
-            logger.info('Replacing the faces in the target image from left to right by order')
+            logger.info('Replacing the faces in the target image from left to right by order', job_id)
             for i in range(num_target_faces):
                 source_faces = get_many_faces(FACE_ANALYSER, cv2.cvtColor(np.array(source_img[i]), cv2.COLOR_RGB2BGR))
                 source_index = i
@@ -123,24 +124,24 @@ def process(source_img: Union[Image.Image, List],
             # detect source faces that will be replaced into the target image
             source_faces = get_many_faces(FACE_ANALYSER, cv2.cvtColor(np.array(source_img[0]), cv2.COLOR_RGB2BGR))
             num_source_faces = len(source_faces)
-            logger.info(f'Source faces: {num_source_faces}')
-            logger.info(f'Target faces: {num_target_faces}')
+            logger.info(f'Source faces: {num_source_faces}', job_id)
+            logger.info(f'Target faces: {num_target_faces}', job_id)
 
             if source_faces is None or num_source_faces == 0:
                 raise Exception('No source faces found!')
 
             if target_indexes == "-1":
                 if num_source_faces == 1:
-                    logger.info('Replacing the first face in the target image with the face from the source image')
+                    logger.info('Replacing the first face in the target image with the face from the source image', job_id)
                     num_iterations = num_source_faces
                 elif num_source_faces < num_target_faces:
-                    logger.info(f'There are less faces in the source image than the target image, replacing the first {num_source_faces} faces')
+                    logger.info(f'There are less faces in the source image than the target image, replacing the first {num_source_faces} faces', job_id)
                     num_iterations = num_source_faces
                 elif num_target_faces < num_source_faces:
-                    logger.info(f'There are less faces in the target image than the source image, replacing {num_target_faces} faces')
+                    logger.info(f'There are less faces in the target image than the source image, replacing {num_target_faces} faces', job_id)
                     num_iterations = num_target_faces
                 else:
-                    logger.info('Replacing all faces in the target image with the faces from the source image')
+                    logger.info('Replacing all faces in the target image with the faces from the source image', job_id)
                     num_iterations = num_target_faces
 
                 for i in range(num_iterations):
@@ -155,7 +156,7 @@ def process(source_img: Union[Image.Image, List],
                         temp_frame
                     )
             elif source_indexes == '-1' and target_indexes == '-1':
-                logger.info('Replacing specific face(s) in the target image with the face from the source image')
+                logger.info('Replacing specific face(s) in the target image with the face from the source image', job_id)
                 target_indexes = target_indexes.split(',')
                 source_index = 0
 
@@ -170,7 +171,7 @@ def process(source_img: Union[Image.Image, List],
                         temp_frame
                     )
             else:
-                logger.info('Replacing specific face(s) in the target image with specific face(s) from the source image')
+                logger.info('Replacing specific face(s) in the target image with specific face(s) from the source image', job_id)
 
                 if source_indexes == "-1":
                     source_indexes = ','.join(map(lambda x: str(x), range(num_source_faces)))
@@ -213,18 +214,19 @@ def process(source_img: Union[Image.Image, List],
                             temp_frame
                         )
         else:
-            logger.error('Unsupported face configuration')
+            logger.error('Unsupported face configuration', job_id)
             raise Exception('Unsupported face configuration')
         result = temp_frame
     else:
-        logger.error('No target faces found')
+        logger.error('No target faces found', job_id)
         raise Exception('No target faces found!')
 
     result_image = Image.fromarray(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
     return result_image
 
 
-def face_swap(src_img_path,
+def face_swap(job_id: str,
+              src_img_path,
               target_img_path,
               source_indexes,
               target_indexes,
@@ -242,20 +244,21 @@ def face_swap(src_img_path,
     target_img = Image.open(target_img_path)
 
     try:
-        logger.info('Performing face swap')
+        logger.info('Performing face swap', job_id)
         result_image = process(
+            job_id,
             source_img,
             target_img,
             source_indexes,
             target_indexes
         )
-        logger.info('Face swap complete')
+        logger.info('Face swap complete', job_id)
     except Exception as e:
         raise
 
     if face_restore:
         result_image = cv2.cvtColor(np.array(result_image), cv2.COLOR_RGB2BGR)
-        logger.info('Performing face restoration using CodeFormer')
+        logger.info('Performing face restoration using CodeFormer', job_id)
 
         try:
             result_image = face_restoration(
@@ -271,7 +274,7 @@ def face_swap(src_img_path,
         except Exception as e:
             raise
 
-        logger.info('CodeFormer face restoration completed successfully')
+        logger.info('CodeFormer face restoration completed successfully', job_id)
         result_image = Image.fromarray(result_image)
 
     output_buffer = io.BytesIO()
@@ -301,13 +304,13 @@ def clean_up_temporary_files(source_image_path: str, target_image_path: str):
     os.remove(target_image_path)
 
 
-def face_swap_api(input):
+def face_swap_api(job_id: str, job_input: dict):
     if not os.path.exists(TMP_PATH):
         os.makedirs(TMP_PATH)
 
     unique_id = uuid.uuid4()
-    source_image_data = input['source_image']
-    target_image_data = input['target_image']
+    source_image_data = job_input['source_image']
+    target_image_data = job_input['target_image']
 
     # Decode the source image data
     source_image = base64.b64decode(source_image_data)
@@ -328,26 +331,27 @@ def face_swap_api(input):
         target_file.write(target_image)
 
     try:
-        logger.info(f'Source indexes: {input["source_indexes"]}')
-        logger.info(f'Target indexes: {input["target_indexes"]}')
-        logger.info(f'Background enhance: {input["background_enhance"]}')
-        logger.info(f'Face Restoration: {input["face_restore"]}')
-        logger.info(f'Face Upsampling: {input["face_upsample"]}')
-        logger.info(f'Upscale: {input["upscale"]}')
-        logger.info(f'Codeformer Fidelity: {input["codeformer_fidelity"]}')
-        logger.info(f'Output Format: {input["output_format"]}')
+        logger.info(f'Source indexes: {job_input["source_indexes"]}', job_id)
+        logger.info(f'Target indexes: {job_input["target_indexes"]}', job_id)
+        logger.info(f'Background enhance: {job_input["background_enhance"]}', job_id)
+        logger.info(f'Face Restoration: {job_input["face_restore"]}', job_id)
+        logger.info(f'Face Upsampling: {job_input["face_upsample"]}', job_id)
+        logger.info(f'Upscale: {job_input["upscale"]}', job_id)
+        logger.info(f'Codeformer Fidelity: {job_input["codeformer_fidelity"]}', job_id)
+        logger.info(f'Output Format: {job_input["output_format"]}', job_id)
 
         result_image = face_swap(
+            job_id,
             source_image_path,
             target_image_path,
-            input['source_indexes'],
-            input['target_indexes'],
-            input['background_enhance'],
-            input['face_restore'],
-            input['face_upsample'],
-            input['upscale'],
-            input['codeformer_fidelity'],
-            input['output_format']
+            job_input['source_indexes'],
+            job_input['target_indexes'],
+            job_input['background_enhance'],
+            job_input['face_restore'],
+            job_input['face_upsample'],
+            job_input['upscale'],
+            job_input['codeformer_fidelity'],
+            job_input['output_format']
         )
 
         clean_up_temporary_files(source_image_path, target_image_path)
@@ -356,7 +360,7 @@ def face_swap_api(input):
             'image': result_image
         }
     except Exception as e:
-        logger.error(f'An exception was raised: {e}')
+        logger.error(f'An exception was raised: {e}', job_id)
         clean_up_temporary_files(source_image_path, target_image_path)
 
         return {
@@ -370,6 +374,7 @@ def face_swap_api(input):
 # RunPod Handler                                                               #
 # ---------------------------------------------------------------------------- #
 def handler(event):
+    job_id = event['id']
     validated_input = validate(event['input'], INPUT_SCHEMA)
 
     if 'errors' in validated_input:
@@ -377,7 +382,7 @@ def handler(event):
             'error': validated_input['errors']
         }
 
-    return face_swap_api(validated_input['validated_input'])
+    return face_swap_api(job_id, validated_input['validated_input'])
 
 
 if __name__ == '__main__':
