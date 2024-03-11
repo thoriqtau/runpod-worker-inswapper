@@ -17,10 +17,7 @@ https://insightface.ai/).
 
 ## Building the Docker image that will be used by the Serverless Worker
 
-There are two options:
-
-1. [Network Volume](docs/building/with-network-volume.md)
-2. [Standalone](docs/building/without-network-volume.md) (without Network Volume)
+[Building the Docker image](docs/building.md)
 
 ## RunPod API Endpoint
 
