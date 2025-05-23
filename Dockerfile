@@ -76,7 +76,7 @@ RUN cd /workspace/runpod-worker-inswapper && \
     wget -O CodeFormer/CodeFormer/weights/realesrgan/RealESRGAN_x2plus.pth "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/RealESRGAN_x2plus.pth"
 
 # Copy handler to ensure its the latest
-COPY --chmod=755 rp_handler.py /workspace/runpod-worker-inswapper/rp_handler.py
+COPY --chmod=755 handler.py /workspace/runpod-worker-inswapper/handler.py
 
 # Docker container start script
 COPY --chmod=755 start.sh /start.sh

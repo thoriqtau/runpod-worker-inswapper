@@ -24,7 +24,7 @@ git clone https://huggingface.co/spaces/sczhou/CodeFormer
 Use `--rp_serve_api` command line argument to serve the API locally.
 
 ```bash
-python3 -u rp_handler.py --rp_serve_api
+python3 -u handler.py --rp_serve_api
 ```
 
 **NOTE:** You need to keep the RunPod Handler API running in order to
