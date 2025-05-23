@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:12.4.1-cudnn8-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -40,7 +40,7 @@ RUN apt update && \
 WORKDIR /workspace
 
 # Install Torch
-RUN pip3 install --no-cache-dir torch==2.4.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+RUN pip3 install --no-cache-dir torch==2.6.0+cu124 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
 # Install Inswapper Serverless Worker
 RUN git clone https://github.com/ashleykleynhans/runpod-worker-inswapper.git && \
@@ -53,7 +53,7 @@ RUN git clone https://github.com/ashleykleynhans/runpod-worker-inswapper.git && 
 RUN cd /workspace/runpod-worker-inswapper && \
     mkdir -p checkpoints/models && \
     cd checkpoints && \
-    wget -O inswapper_128.onnx https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx && \
+    wget -O inswapper_128.onnx "https://huggingface.co/ashleykleynhans/inswapper/resolve/main/inswapper_128.onnx?download=true" && \
     cd models && \
     wget https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip && \
     mkdir buffalo_l && \
