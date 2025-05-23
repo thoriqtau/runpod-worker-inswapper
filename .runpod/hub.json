@@ -3,7 +3,7 @@
   "description": "RunPod Serverless Worker for Face Swapper and Restoration",
   "type": "serverless",
   "category": "image",
-  "iconUrl": "https://example.com/icon.png",
+  "iconUrl": "https://raw.githubusercontent.com/ashleykleynhans/runpod-worker-inswapper/main/assets/faceswap.png",
   "config": {
     "runsOn": "GPU",
     "containerDiskInGb": 10,
